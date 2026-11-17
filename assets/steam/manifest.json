@@ -1,0 +1,118 @@
+{
+ "appid": "4459590",
+ "name": "슬롯바운드 - Slotbound",
+ "developers": [
+  "Optima Arch"
+ ],
+ "publishers": [
+  "Optima Arch"
+ ],
+ "release_date": {
+  "coming_soon": false,
+  "date": "2026년 11월 12일"
+ },
+ "price_overview": {
+  "currency": "KRW",
+  "initial": 1200000,
+  "final": 1080000,
+  "discount_percent": 10,
+  "initial_formatted": "₩ 12,000",
+  "final_formatted": "₩ 10,800"
+ },
+ "store_url": "https://store.steampowered.com/app/4459590/",
+ "api": "https://store.steampowered.com/api/appdetails?appids=4459590&cc=kr&l=koreana",
+ "items": [
+  {
+   "kind": "header_image",
+   "file": "header.jpg",
+   "bytes": 57702,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/560f439f789caa08634fbf9ff462c73bf06fbf41/header.jpg?t=1794902941"
+  },
+  {
+   "kind": "capsule_image",
+   "file": "capsule.jpg",
+   "bytes": 15164,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/d64e41eb0453bee4446e8b7613054f88fe7afa77/capsule_231x87.jpg?t=1794902941"
+  },
+  {
+   "kind": "capsule_imagev5",
+   "file": "capsule_v5.jpg",
+   "bytes": 10389,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/d64e41eb0453bee4446e8b7613054f88fe7afa77/capsule_184x69.jpg?t=1794902941"
+  },
+  {
+   "kind": "background_raw",
+   "file": "background_raw.jpg",
+   "bytes": 210198,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/616207a48db386584162f64044508aeda0bedeb4/page_bg_raw.jpg?t=1794902941"
+  },
+  {
+   "kind": "background",
+   "file": "background.jpg",
+   "bytes": 66455,
+   "source": "https://store.akamai.steamstatic.com/images/storepagebackground/app/4459590?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_01.jpg",
+   "bytes": 384181,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/74389100499c6a550820119734390c9be505c268/ss_74389100499c6a550820119734390c9be505c268.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_02.jpg",
+   "bytes": 378988,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/47e984dfc32ad2c2d3d4bc181d863867412b35cf/ss_47e984dfc32ad2c2d3d4bc181d863867412b35cf.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_03.jpg",
+   "bytes": 445363,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/4cb04fecd9122327cf2b1f41e09c884e8c33f891/ss_4cb04fecd9122327cf2b1f41e09c884e8c33f891.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_04.jpg",
+   "bytes": 296943,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/d6565a14b72f57e5767da6211d6f531a9fdcc958/ss_d6565a14b72f57e5767da6211d6f531a9fdcc958.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_05.jpg",
+   "bytes": 456026,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/710630264d0adbfa0fb2222c765ebe381a90d88a/ss_710630264d0adbfa0fb2222c765ebe381a90d88a.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_06.jpg",
+   "bytes": 345412,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/cbd52c5168531cda7a081e52e57c88d1f6e55009/ss_cbd52c5168531cda7a081e52e57c88d1f6e55009.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_07.jpg",
+   "bytes": 371147,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/ccb8ffe285df94c4af258e72a156a2e17c429730/ss_ccb8ffe285df94c4af258e72a156a2e17c429730.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "screenshot",
+   "file": "ss_08.jpg",
+   "bytes": 321583,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4459590/9dc2621f3540da4e3e16ab34e362b0c4a7db28d1/ss_9dc2621f3540da4e3e16ab34e362b0c4a7db28d1.1920x1080.jpg?t=1794902941"
+  },
+  {
+   "kind": "movie",
+   "file": "trailer_01.mp4",
+   "bytes": 10992294,
+   "source": "https://video.akamai.steamstatic.com/store_trailers/4459590/61881972/3d4feef8b4ba165d676f76197190b1cd3af96120/1793117327/hls_264_master.m3u8?t=1793117760",
+   "title": "Slotbound - Official Trailer"
+  },
+  {
+   "kind": "movie_thumb",
+   "file": "trailer_01_thumb.jpg",
+   "bytes": 100195,
+   "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257480887/4ab785cc721c60f9c7263deda2acb668241312d1/movie_600x337.jpg?t=1793117760"
+  }
+ ],
+ "note": "스팀 스토어 공식 미디어. 발표 자료에 쓸 때 출처(스팀 스토어 페이지)를 표기한다."
+}

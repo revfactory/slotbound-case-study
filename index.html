@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Slotbound 사례 발표</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="deck.css">
+<link rel="stylesheet" href="theme.css">
+<style>
+  /* ── 공용 보조(이 덱 전용) ── */
+  .gen-label { position: absolute; right: 16px; bottom: 16px; font: 500 20px/1 var(--font-sans); color: var(--ink2); background: rgba(10,7,13,.72); padding: 8px 12px; }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(1000px 560px at 50% 46%, rgba(20,14,25,.86), rgba(20,14,25,.45) 65%, rgba(20,14,25,.2)); }
+  .ch-title.long { font-size: 88px; line-height: 1.16; letter-spacing: -.025em; }
+  .roll { display: inline-block; height: 1em; overflow: hidden; vertical-align: top; }
+  .roll .strip { display: flex; flex-direction: column; transform: translateY(-10em); }
+  .roll .strip { line-height: 1em; }
+  .roll .strip::before { content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9"; white-space: pre; display: block; height: 10em; line-height: 1em; }
+  .slide.is-active .roll .strip { animation: dk-roll .9s var(--ease-out) both; animation-delay: calc(var(--i) * 80ms + 200ms); }
+  @keyframes dk-roll { from { transform: translateY(0); } to { transform: translateY(-10em); } }
+  html.static .roll .strip { animation: none !important; transform: none; }
+  html.static .roll .strip::before { display: none; }
+  .cursor { display: inline-block; width: .55em; height: .9em; background: var(--accent); margin-left: .25em; vertical-align: -.08em; }
+  .slide.is-active .cursor { animation: dk-blink 1s steps(1) infinite; }
+  @keyframes dk-blink { 50% { opacity: 0; } }
+  html.static .cursor { animation: none !important; }
+  ul.facts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 18px; }
+  ul.facts li { font: 500 30px/1.45 var(--font-sans); color: var(--ink2); padding-left: 34px; position: relative; }
+  ul.facts li::before { content: ""; position: absolute; left: 0; top: 16px; width: 12px; height: 12px; background: var(--accent2); }
+  .step-glow { position: absolute; inset: 0; pointer-events: none;
+    box-shadow: 0 -4px 0 0 var(--accent), 0 4px 0 0 var(--accent), -4px 0 0 0 var(--accent), 4px 0 0 0 var(--accent), 0 0 40px rgba(255,201,74,.35); }
+  .step-glow[data-step]:not(.step-on) { transform: none; }
+
+  /* S01 인트로 */
+  #s01 { background: #000; }
+  #s01 video { opacity: 0; transition: opacity .4s var(--ease-out); }
+  #s01.playing video, html.static #s01 video { opacity: 1; }
+  #s01 .end-cap { position: absolute; left: 0; right: 0; bottom: 110px; text-align: center; opacity: 0; transform: translateY(8px); transition: opacity .6s, transform .6s var(--ease-out); }
+  #s01 .end-cap span { font: 700 33px/1 var(--font-pixel-s); -webkit-font-smoothing: none; color: var(--ink); background: rgba(20,14,25,.7); padding: 14px 22px; }
+  #s01 .src { opacity: 0; transition: opacity .6s; }
+  #s01.ended .end-cap, html.static #s01 .end-cap { opacity: 1; transform: none; }
+  #s01.ended .src, html.static #s01 .src { opacity: .9; }
+
+  /* S02 */
+  #s02 .hero-c { position: absolute; left: var(--pad); right: var(--pad); top: 150px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #s02 .gnum { margin-top: 30px; font-size: 230px; }
+  #s02 .uline { display: block; margin-top: 22px; }
+  #s02 .hero-label { margin-top: 20px; font: 700 40px/1.3 var(--font-display); color: var(--ink); }
+  #s02 .hero-label .dim { font: 500 28px/1.3 var(--font-sans); color: var(--muted); }
+  #s02 .body { margin-top: 14px; }
+  #s02 .minis { position: absolute; left: 0; right: 0; top: 700px; display: flex; justify-content: center; gap: 48px; }
+  #s02 .minis .card { width: 740px; padding: 30px 40px 32px; gap: 10px; }
+  #s02 .minis .cv { font-size: 72px; white-space: nowrap; }
+  #s02 .minis .cd { font-size: 28px; }
+
+  /* S04 */
+  #s04 .s04-img { position: absolute; right: 0; top: 0; width: 960px; height: 1080px; overflow: hidden; }
+  #s04 .s04-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--bg) 0%, rgba(20,14,25,0) 22%), linear-gradient(0deg, rgba(20,14,25,.9) 0%, rgba(20,14,25,0) 22%); }
+  #s04 .gen-label { z-index: 2; bottom: 110px; right: 40px; }
+  #s04 .split-text { width: 800px; gap: 34px; }
+  #s04 .capsule { width: 277px; height: auto; display: block; }
+  #s04 h2 { font-size: 80px; }
+  #s04 .row { gap: 16px; flex-wrap: wrap; }
+  #s04 .src { right: 120px; }
+
+  /* S05 */
+  #s05 .head { position: absolute; left: var(--pad); right: var(--pad); top: var(--pad); }
+  #s05 .head .row { align-items: flex-end; gap: 44px; margin-top: 26px; }
+  #s05 .head .gnum { font-size: 120px; text-shadow: 0 6px 0 var(--gold-deep); line-height: 1; }
+  #s05 .head h2 { margin-bottom: 10px; }
+  #s05 .qcard { left: var(--pad); right: var(--pad); top: 380px; padding: 56px 80px 50px 80px; }
+  #s05 .qcard > .capsule { position: absolute; right: 48px; top: -36px; width: 231px; height: 87px; box-shadow: 0 0 0 4px var(--parch-edge), 0 0 0 8px #241510; }
+  #s05 .q-en { font: 500 28px/1.5 var(--font-sans); color: #5b4636; margin: 0; font-style: italic; }
+  #s05 .qtext { font-size: 44px; margin-top: 26px; }
+  #s05 mark.mk { color: inherit; background: linear-gradient(transparent 52%, rgba(255,201,74,.8) 52%) no-repeat; background-size: 0% 100%; transition: background-size 1s var(--ease-io) 1.5s; }
+  #s05.is-active mark.mk, html.static #s05 mark.mk { background-size: 100% 100%; }
+  html.static #s05 mark.mk { transition: none; }
+  #s05 .qby { font-size: 28px; }
+  #s05 .qby b { color: #7a4f0e; }
+
+  /* S06 */
+  #s06 .ch-part { color: var(--ink); }
+  #s06.is-active .flash { animation: s06-flash 2s steps(1) infinite; }
+  @keyframes s06-flash { 0%, 70% { color: var(--ink); } 75%, 95% { color: var(--accent); } }
+  html.static #s06 .flash { animation: none; }
+  #s06:not(.is-active):not(.is-prev) .ch-title[data-anim] { clip-path: inset(0 50% 0 50%); }
+  #s06 .logo { position: absolute; left: var(--pad); top: 72px; width: 460px; height: 215px; }
+  #s06 .ch-wrap { bottom: 120px; }
+  #s06 .logo img { width: 100%; height: 100%; display: block; }
+
+  /* S07 */
+  #s07 .scrim { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(20,14,25,.97) 0%, rgba(20,14,25,.9) 26%, rgba(20,14,25,.35) 48%, rgba(20,14,25,0) 62%); }
+  #s07 .left { position: absolute; left: var(--pad); bottom: 120px; width: 1040px; display: flex; flex-direction: column; gap: 22px; }
+  #s07 .chips { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font: 500 26px/1.3 var(--font-sans); color: var(--ink2); }
+  #s07 .chips .tag { font: 700 26px/1 var(--font-sans); -webkit-font-smoothing: antialiased; padding: 10px 14px; }
+  #s07 .taglines { position: absolute; right: var(--pad); bottom: 120px; width: 600px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 22px; }
+  #s07 .taglines { background: rgba(20,14,25,.84); padding: 28px 32px 30px; box-shadow: 0 0 60px 30px rgba(20,14,25,.6); }
+  #s07 .part-tag { background: rgba(20,14,25,.88); padding: 10px 14px; top: 44px; }
+  #s07 .taglines li { position: relative; padding-left: 40px; opacity: .2; transition: opacity .5s; }
+  #s07 .taglines li b { display: block; font: 700 33px/1.1 var(--font-pixel-s); -webkit-font-smoothing: none; color: var(--ink); letter-spacing: .03em; }
+  #s07 .taglines li span { display: block; font: 500 26px/1.35 var(--font-sans); color: var(--ink2); margin-top: 6px; }
+  #s07 .taglines li.past { opacity: .4; }
+  #s07 .taglines li.on { opacity: 1; }
+  #s07 .taglines li.on b { color: var(--accent); }
+  #s07 .taglines li.on::before { content: ""; position: absolute; left: 0; top: 8px; width: 18px; height: 18px; background: var(--accent); box-shadow: 4px 4px 0 var(--gold-deep); }
+  html.static #s07 .taglines li { opacity: 1; }
+
+  /* S08 */
+  #s08 svg.ring { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+  #s08 .node { position: absolute; width: 224px; padding: 14px 14px 12px; text-align: center; }
+  #s08 .node .th { width: 196px; height: 110px; display: block; object-fit: cover; }
+  #s08 .node .t { font: 800 32px/1.1 var(--font-display); margin-top: 10px; }
+  #s08 .node .t i { font: 700 22px/1 var(--font-pixel-s); font-style: normal; color: var(--accent); -webkit-font-smoothing: none; margin-right: 8px; vertical-align: 4px; }
+  #s08 .center { position: absolute; left: 470px; top: 618px; width: 260px; text-align: center; font: 700 28px/1.35 var(--font-sans); color: var(--ink2); }
+  #s08 .center b { color: var(--accent); font-weight: 700; }
+  #s08 .orbit { position: absolute; left: 340px; top: 400px; width: 520px; height: 520px; pointer-events: none; }
+  #s08 .orbit::before { content: ""; position: absolute; left: 50%; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; background: var(--accent); box-shadow: 0 0 24px rgba(255,201,74,.8); }
+  #s08.is-active .orbit { animation: dk-spin 6s linear infinite; }
+  html.static #s08 .orbit { animation: none; }
+  #s08 .panel { position: absolute; left: 1040px; top: 300px; width: 760px; height: 640px; }
+  #s08 .pv { position: absolute; inset: 0; background: var(--bg); }
+  #s08 .pv .px { width: 760px; height: 428px; }
+  #s08 .pv .cap { margin-top: 34px; }
+  #s08 .pv .cap .n { font: 700 33px/1 var(--font-pixel-s); color: var(--accent); -webkit-font-smoothing: none; }
+  #s08 .pv .cap p { margin: 12px 0 0; font: 500 30px/1.45 var(--font-sans); color: var(--ink2); }
+  #s08 .pv[data-step]:not(.step-on) { transform: none; }
+
+  /* S09 */
+  #s09 .cards { left: var(--pad); right: var(--pad); top: 370px; grid-template-columns: repeat(4, 1fr); gap: 36px; }
+  #s09 .card { padding: 44px 36px 40px; gap: 10px; }
+  #s09 .card-img { height: 226px; margin: -44px -36px 18px; position: relative; }
+  #s09 .card-img video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #s09 .cv { font-size: 104px; }
+  #s09 .en { font: 700 33px/1 var(--font-pixel-s); color: var(--ink); -webkit-font-smoothing: none; letter-spacing: .03em; }
+  #s09 .cd { font-size: 28px; }
+  #s09 .wstrip { display: flex; width: 400%; height: 100%; }
+  #s09 .wstrip img { width: 25%; height: 100%; object-fit: cover; display: block; }
+  #s09.is-active .wstrip { animation: s09-w 8s steps(1) infinite; }
+  @keyframes s09-w { 0% { transform: translateX(0); } 25% { transform: translateX(-25%); } 50% { transform: translateX(-50%); } 75% { transform: translateX(-75%); } }
+  html.static #s09 .wstrip { animation: none; }
+  #s09 .cond { margin-top: 18px; }
+
+  /* S10 */
+  #s10 .gnum { font-size: 250px; margin-top: 18px; }
+  #s10 .day { color: var(--ink); text-shadow: none; transition: color .5s 7.3s; }
+  #s10.is-active .day { color: var(--accent); }
+  html.static #s10 .day { transition: none; color: var(--accent); }
+  #s10 .ch-sub { font-family: var(--font-mono); font-weight: 500; }
+  #s10 .ch-dim { background: linear-gradient(90deg, rgba(20,14,25,.9) 0%, rgba(20,14,25,.7) 50%, rgba(20,14,25,.35) 85%), linear-gradient(0deg, rgba(20,14,25,.6), transparent 60%); }
+
+  /* S11 */
+  #s11 .dcount { position: absolute; right: var(--pad); top: 118px; text-align: right; }
+  #s11 .dcount .gnum { font-size: 104px; }
+  #s11 .dcount .sub { margin-top: 10px; }
+  #s11 .lab { position: absolute; width: 380px; text-align: center; }
+  #s11 .lab.up { bottom: 500px; }
+  #s11 .lab.dn { top: 712px; }
+  #s11 .lab .dt { font: 500 28px/1 var(--font-mono); color: var(--muted); }
+  #s11 .lab .dd { font: 700 24px/1 var(--font-mono); color: var(--accent); margin-top: 8px; }
+  #s11 .lab .tx { font: 700 28px/1.32 var(--font-sans); color: var(--ink); margin-top: 10px; }
+  #s11 .lab .cn { font: 500 22px/1.3 var(--font-sans); color: var(--muted); margin-top: 6px; }
+  #s11 .lab.key .dt { color: var(--accent); }
+  #s11 .dot { position: absolute; top: 608px; width: 24px; height: 24px; margin-left: -12px; background: var(--panel); box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--px-line); }
+  #s11 .dot.key { background: var(--accent); box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--gold-deep), 0 0 26px rgba(255,201,74,.6); }
+  #s11 .bk { position: absolute; font: 700 24px/1 var(--font-mono); color: var(--accent); background: var(--bg); padding: 0 10px; }
+  #s11 .cap7 { width: 160px; display: block; margin: 12px 0 0 auto; }
+
+  /* S12 */
+  #s12 .cards { left: var(--pad); right: var(--pad); top: 340px; grid-template-columns: 1fr 1fr; gap: 40px 44px; }
+  #s12 .card { height: 286px; padding: 36px 44px; gap: 12px; }
+  #s12 .lbl { display: flex; align-items: center; gap: 16px; }
+  #s12 .tag.dev { background: var(--accent3); color: #1d2410; }
+  #s12 .tag.press { background: var(--panel); color: var(--ink2); }
+  #s12 .lbl .who { font: 700 28px/1 var(--font-sans); color: var(--ink); }
+  #s12 .cd { font-size: 29px; line-height: 1.45; }
+  #s12 .cd b { color: var(--ink); }
+  #s12 .cond { font: 500 22px/1.3 var(--font-sans); color: var(--muted); margin-top: auto; }
+
+  /* S13 */
+  #s13 .rl { position: absolute; left: var(--pad); width: 400px; font: 700 30px/1.25 var(--font-sans); color: var(--ink); }
+  #s13 .rl small { display: block; font: 500 24px/1.3 var(--font-mono); color: var(--muted); margin-top: 6px; }
+  #s13 .bar { position: absolute; height: 52px; }
+  #s13 .bar.gray { background: repeating-linear-gradient(90deg, #5d4d63 0 12px, #54455a 12px 16px); }
+  #s13 .bar.gray2 { background: repeating-linear-gradient(90deg, #3d3142 0 12px, #362b3a 12px 16px); }
+  #s13 .bar.red { background: repeating-linear-gradient(90deg, var(--danger) 0 12px, #c94a43 12px 16px); box-shadow: inset 0 6px 0 rgba(255,255,255,.14), inset 0 -6px 0 rgba(0,0,0,.22); }
+  #s13 .bar.dash { background: repeating-linear-gradient(90deg, var(--danger) 0 14px, transparent 14px 26px); height: 12px; margin-top: 20px; }
+  #s13 .bv { position: absolute; font: 900 40px/1 var(--font-display); color: var(--accent); white-space: nowrap; text-shadow: 0 3px 0 var(--gold-deep); }
+  #s13 .bv small { font: 600 26px/1 var(--font-sans); color: var(--ink2); text-shadow: none; margin-left: 10px; }
+  #s13 .inbar { position: absolute; font: 700 26px/52px var(--font-sans); color: #fff; padding-left: 18px; white-space: nowrap; }
+  #s13 .vl { position: absolute; width: 4px; }
+  #s13 .vtag { position: absolute; text-align: right; font: 600 26px/1.3 var(--font-sans); color: var(--ink2); white-space: nowrap; }
+  #s13 .vtag b { font-family: var(--font-mono); color: var(--accent); font-weight: 700; }
+  #s13 .shake { display: inline-block; }
+  #s13.is-active .shake { animation: s13-shake .5s steps(2) 2.6s 2; }
+  @keyframes s13-shake { 0% { transform: translateX(-2px); } 50% { transform: translateX(2px); } 100% { transform: translateX(0); } }
+  html.static #s13 .shake { animation: none; }
+  #s13 .axis { top: 690px; left: 560px; right: 120px; }
+  #s13 .tick { position: absolute; top: 706px; font: 500 24px/1 var(--font-mono); color: var(--muted); transform: translateX(-50%); }
+  #s13 .bottom { position: absolute; left: var(--pad); right: var(--pad); top: 790px; display: grid; grid-template-columns: 560px 1fr; gap: 44px; }
+  #s13 .bottom .card { padding: 30px 40px; flex-direction: row; align-items: center; gap: 28px; }
+  #s13 .bottom .cv { font-size: 80px; white-space: nowrap; }
+  #s13 .bottom .cd { font-size: 29px; }
+
+  /* S14 */
+  #s14 .bgimg { position: absolute; inset: -20px; width: calc(100% + 40px); height: calc(100% + 40px); object-fit: cover; filter: brightness(.15) blur(6px); }
+  #s14 .lft { position: absolute; left: var(--pad); top: var(--pad); width: 760px; }
+  #s14 .lft .gnum { font-size: 300px; margin-top: 10px; line-height: .95; }
+  #s14 .rgt { position: absolute; left: 920px; right: var(--pad); top: 160px; display: flex; flex-direction: column; gap: 30px; }
+  #s14 .qmini { padding: 30px 40px; }
+  #s14 .qmini p.ko { margin: 0; font: 700 38px/1.42 var(--font-display); color: var(--parch-ink); letter-spacing: -.01em; }
+  #s14 .qmini p.en { margin: 14px 0 0; font: 500 24px/1.45 var(--font-sans); color: #5b4636; font-style: italic; }
+  #s14 .qmini .by { font: 600 24px/1.3 var(--font-sans); color: #5b4636; margin-top: 14px; font-style: normal; }
+  #s14 .axis { top: 790px; left: 120px; right: 120px; }
+  #s14 .dotw { position: absolute; top: 778px; width: 28px; margin-left: -14px; }
+  #s14 .dotw .d { width: 28px; height: 28px; background: var(--accent); box-shadow: 0 0 0 4px var(--bg), 0 0 0 8px var(--gold-deep); cursor: pointer; }
+  #s14 .dl { position: absolute; font: 700 24px/1 var(--font-mono); color: var(--ink2); transform: translateX(-50%); }
+  #s14 .gl { position: absolute; font: 600 26px/1.3 var(--font-sans); color: var(--ink2); white-space: nowrap; }
+  #s14 .gl b { color: var(--accent); font-family: var(--font-mono); font-weight: 700; }
+  #s14 .tk { position: absolute; top: 740px; font: 500 22px/1 var(--font-mono); color: var(--muted); }
+  #s14 .tip { position: absolute; left: 920px; top: 690px; right: var(--pad); font: 600 26px/1.3 var(--font-sans); color: var(--accent); min-height: 34px; }
+  html.static #s14 .tip { display: none; }
+
+  /* S15 */
+  #s15 .ch-wrap { top: 120px; bottom: auto; }
+  #s15 .ch-dim { background: linear-gradient(180deg, rgba(20,14,25,.92) 0%, rgba(20,14,25,.75) 40%, rgba(20,14,25,0) 70%), linear-gradient(0deg, rgba(20,14,25,.85) 0%, rgba(20,14,25,0) 14%); }
+  #s15 .flow { display: flex; align-items: center; gap: 22px; margin-top: 30px; font: 600 36px/1.2 var(--font-sans); color: var(--ink); }
+  #s15 .flow .hl { font-weight: 800; }
+
+  /* S16 */
+  #s16 .flag { position: absolute; width: 4px; background: var(--px-line); }
+  #s16 .fl { position: absolute; font: 600 26px/1.3 var(--font-sans); color: var(--ink2); white-space: nowrap; }
+  #s16 .fl b { font-family: var(--font-mono); color: var(--accent); font-weight: 700; }
+  #s16 .fl.r { text-align: right; }
+  #s16 .axis { top: 478px; left: 120px; right: 120px; background: var(--ink2); opacity: .6; }
+  #s16 .dayband { position: absolute; top: 482px; height: 418px; }
+  #s16 .dayband.alt { background: rgba(243,236,216,.035); }
+  #s16 .dlab { position: absolute; top: 914px; font: 600 26px/1 var(--font-mono); color: var(--ink2); transform: translateX(-50%); white-space: nowrap; }
+  #s16 .pb { position: absolute; bottom: 180px; width: 110px; background: repeating-linear-gradient(0deg, var(--accent2) 0 12px, #8a4cf0 12px 16px); }
+  #s16 .pb.max { background: repeating-linear-gradient(0deg, var(--accent) 0 12px, #e9b43a 12px 16px); }
+  #s16 .pb.dashed { background: none; box-shadow: none; outline: 4px dashed var(--accent2); outline-offset: -4px; }
+  #s16 .pv { position: absolute; width: 340px; margin-left: -170px; font: 900 40px/1 var(--font-display); color: var(--ink); white-space: nowrap; text-align: center; }
+  #s16 .pv.max { color: var(--accent); font-size: 60px; text-shadow: 0 4px 0 var(--gold-deep); }
+  #s16 .pv small { display: block; font: 500 22px/1.25 var(--font-sans); color: var(--muted); margin-top: 8px; text-shadow: none; }
+  #s16 .nowline { position: absolute; height: 0; border-top: 4px dashed var(--ink2); }
+  #s16 .nowlab { position: absolute; font: 600 24px/1.25 var(--font-sans); white-space: nowrap; color: var(--ink2); }
+  #s16 .nowlab b { font-family: var(--font-mono); color: var(--accent); }
+  #s16 .ctitle { position: absolute; left: 140px; top: 500px; font: 600 24px/1.3 var(--font-sans); color: var(--muted); }
+
+  /* S17 */
+  #s17 .fr { position: absolute; left: var(--pad); width: 760px; }
+  #s17 .fr .f { font: 800 40px/1.2 var(--font-display); color: var(--ink); white-space: nowrap; }
+  #s17 .fr .f .op { color: var(--muted); margin: 0 10px; }
+  #s17 .fr .f .gold { color: var(--accent); }
+  #s17 .fr .s { font: 500 24px/1.3 var(--font-sans); color: var(--muted); margin-top: 8px; }
+  #s17 .cb { position: absolute; left: 900px; height: 60px; background: repeating-linear-gradient(90deg, var(--accent2) 0 12px, #8a4cf0 12px 16px); }
+  #s17 .cb.green { background: repeating-linear-gradient(90deg, var(--accent3) 0 12px, #9fb36e 12px 16px); }
+  #s17 .cv2 { position: absolute; font: 900 44px/60px var(--font-display); color: var(--accent); white-space: nowrap; text-shadow: 0 3px 0 var(--gold-deep); }
+  #s17 .cv2.in { color: #1d2410; text-shadow: none; text-align: right; }
+  #s17 .brk { position: absolute; left: 1480px; top: 368px; }
+  #s17 .brk .bt { position: absolute; left: 44px; top: 96px; width: 290px; font: 800 36px/1.25 var(--font-display); color: var(--accent); }
+  #s17 .brk .bt small { display: block; font: 600 26px/1.3 var(--font-sans); color: var(--ink2); margin-top: 10px; }
+  #s17 .bottomline { position: absolute; left: var(--pad); right: var(--pad); top: 880px; font: 600 32px/1.45 var(--font-sans); color: var(--ink); }
+
+  /* S18 */
+  #s18 .bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.2); }
+  #s18 .gen-label { bottom: 104px; right: 120px; }
+  #s18 .devcard { position: absolute; left: var(--pad); top: 400px; width: 600px; padding: 40px 44px 44px; display: flex; flex-direction: column; gap: 14px; }
+  #s18 .devcard ul { margin: 6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 18px; }
+  #s18 .devcard li { font: 600 32px/1.35 var(--font-sans); color: var(--ink); padding-left: 28px; position: relative; }
+  #s18 .devcard li::before { content: ""; position: absolute; left: 0; top: 14px; width: 10px; height: 10px; background: var(--accent3); }
+  #s18 .devcard li small { font: 500 24px/1.3 var(--font-mono); color: var(--muted); margin-left: 8px; }
+  #s18 .rc { position: absolute; left: 860px; width: 940px; height: 180px; padding: 30px 40px; display: flex; flex-direction: column; gap: 12px; }
+  #s18 .rc .ct { font-size: 36px; }
+  #s18 .rc .cd { font-size: 27px; line-height: 1.4; }
+  #s18 .rc .cd small { color: var(--muted); font-size: 24px; }
+  #s18 .rc .cd .hl { font-weight: 800; font-family: var(--font-display); }
+  #s18 .ln { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+
+  /* S19 */
+  #s19 .ptitle { position: absolute; top: 300px; font: 700 30px/1 var(--font-sans); color: var(--ink); }
+  #s19 .ptitle small { font: 500 24px/1 var(--font-sans); color: var(--muted); margin-left: 10px; }
+  #s19 svg.ch { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  #s19 .pl { position: absolute; width: 200px; margin-left: -100px; text-align: center; font: 800 34px/1 var(--font-display); color: var(--accent); white-space: nowrap; text-shadow: 0 3px 0 var(--gold-deep); }
+  #s19 .pl.ink { color: var(--ink); text-shadow: none; }
+  #s19 .pl.red { color: var(--danger); text-shadow: none; }
+  #s19 .xl { position: absolute; top: 740px; font: 500 24px/1.25 var(--font-mono); color: var(--muted); transform: translateX(-50%); text-align: center; white-space: nowrap; }
+  #s19 .xl b { color: var(--ink2); font-weight: 600; }
+  #s19 .rb { position: absolute; width: 104px; bottom: 360px; background: repeating-linear-gradient(0deg, var(--accent2) 0 12px, #8a4cf0 12px 16px); }
+  #s19 .rb.red { background: repeating-linear-gradient(0deg, var(--danger) 0 12px, #c94a43 12px 16px); }
+  #s19 .demo { position: absolute; font: 600 24px/1 var(--font-sans); color: #c4a2ff; }
+  #s19 .tag.red { font-size: 24px; }
+  #s19 .notes2 { position: absolute; left: var(--pad); right: var(--pad); top: 838px; display: flex; flex-direction: column; gap: 10px; }
+  #s19 .notes2 .sub { font-size: 24px; }
+  #s19 .notes2 .rx { font: 600 27px/1.35 var(--font-sans); color: var(--ink2); }
+  #s19 .notes2 .rx b { color: var(--accent3); }
+  #s19 .notes2 .rx em { font-style: normal; color: var(--danger); font-weight: 700; }
+
+  /* S20 */
+  #s20 .rowl { position: absolute; left: var(--pad); width: 460px; }
+  #s20 .rowl .nm { font: 800 40px/1.2 var(--font-display); color: var(--ink); }
+  #s20 .rowl .ds { font: 500 26px/1.3 var(--font-sans); color: var(--muted); margin-top: 6px; }
+  #s20 .cap { width: 231px; display: block; margin-bottom: 14px; box-shadow: 0 0 0 4px var(--px-line), 0 0 0 8px var(--px-out); }
+  #s20 .hb { position: absolute; left: 620px; height: 72px; }
+  #s20 .hb.gold { background: repeating-linear-gradient(90deg, var(--accent) 0 12px, #e9b43a 12px 16px); }
+  #s20 .hb.mute { background: repeating-linear-gradient(90deg, #5d4d63 0 12px, #54455a 12px 16px); }
+  .slide.is-active#s20 .hb[data-anim] { transition-timing-function: linear; }
+  #s20 .hv { position: absolute; font: 900 64px/1 var(--font-display); color: var(--accent); white-space: nowrap; text-shadow: 0 4px 0 var(--gold-deep); }
+  #s20 .hv.ink { color: var(--ink); text-shadow: none; font-size: 52px; }
+  #s20 .axis { top: 760px; left: 620px; width: 1080px; }
+  #s20 .tk { position: absolute; top: 776px; font: 500 24px/1 var(--font-mono); color: var(--muted); transform: translateX(-50%); }
+  #s20 .note { position: absolute; left: var(--pad); right: var(--pad); top: 850px; }
+  #s20 .note .body-l { color: var(--ink); font-size: 34px; }
+
+  /* S21 */
+  #s21 .ch-dim { background: radial-gradient(760px 420px at 50% 52%, rgba(20,14,25,.82), rgba(20,14,25,.35) 70%, rgba(20,14,25,0)); }
+  #s21 .ch-wrap { left: var(--pad); right: var(--pad); top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+
+  /* S22 */
+  #s22 .bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(.12) saturate(.7); }
+  #s22 .cards { left: var(--pad); right: var(--pad); top: 340px; grid-template-columns: repeat(4, 1fr); gap: 36px; }
+  #s22 .card { height: 470px; padding: 40px 36px; gap: 18px; transform-origin: left center; }
+  #s22:not(.is-active):not(.is-prev) .card[data-anim] { opacity: 0; transform: scaleX(0); }
+  #s22 .cv { font-size: 120px; text-shadow: 0 6px 0 var(--gold-deep); }
+  #s22 .cv .unit { font-size: .45em; margin-left: .06em; }
+  #s22 .cd { font-size: 30px; line-height: 1.45; color: var(--ink); }
+  #s22 .basis { margin-top: auto; font: 500 22px/1.3 var(--font-sans); color: var(--muted); }
+  #s22 .disc { position: absolute; left: var(--pad); right: var(--pad); top: 866px; font: 600 32px/1.4 var(--font-sans); color: var(--ink2); display: flex; align-items: center; gap: 18px; }
+  #s22 .disc::before { content: ""; width: 16px; height: 16px; background: var(--danger); flex: none; }
+
+  /* S23 */
+  #s23 .img { position: absolute; left: 0; top: 0; width: 860px; height: 1080px; overflow: hidden; }
+  #s23 .img img { width: 100%; height: 100%; object-fit: cover; object-position: 30% 50%; image-rendering: pixelated; display: block; }
+  #s23 .img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(270deg, var(--bg) 0%, rgba(20,14,25,0) 30%), linear-gradient(0deg, rgba(20,14,25,.85) 0%, rgba(20,14,25,0) 18%); }
+  #s23 .rt { position: absolute; left: 940px; right: var(--pad); top: var(--pad); }
+  #s23 .rt h2 { font-size: 72px; margin-top: 22px; }
+  #s23 .chk { margin-top: 34px; display: flex; flex-direction: column; gap: 20px; }
+  #s23 .ci { display: grid; grid-template-columns: 52px 1fr; gap: 0 22px; align-items: start; }
+  #s23 .box { position: relative; width: 40px; height: 40px; margin-top: 2px; box-shadow: inset 0 0 0 4px var(--px-line); }
+  #s23 .box .fillc { position: absolute; inset: 0; background: var(--accent); box-shadow: inset 0 0 0 4px var(--gold-deep); }
+  #s23 .box .fillc::after { content: ""; position: absolute; left: 13px; top: 6px; width: 10px; height: 18px; border: solid #2a1a05; border-width: 0 6px 6px 0; transform: rotate(45deg); }
+  #s23 .box .fillc[data-step]:not(.step-on) { transform: none; }
+  #s23 .box.warn { box-shadow: inset 0 0 0 4px var(--danger); }
+  #s23 .box.warn .fillc { background: var(--danger); box-shadow: inset 0 0 0 4px #7a2420; }
+  #s23 .box.warn .fillc::after { content: "!"; border: 0; transform: none; left: 0; top: 0; width: 40px; height: 40px; text-align: center; font: 700 33px/40px var(--font-pixel-s); color: #fff; -webkit-font-smoothing: none; }
+  #s23 .caveat { margin-top: 30px; font: 600 28px/1.4 var(--font-sans); color: var(--ink2); display: flex; align-items: center; gap: 16px; }
+  #s23 .caveat::before { content: ""; width: 14px; height: 14px; background: var(--danger); flex: none; }
+  #s23 .q { font: 700 32px/1.3 var(--font-sans); color: var(--ink); }
+  #s23 .v { font: 500 27px/1.35 var(--font-sans); color: var(--ink2); margin-top: 6px; }
+  #s23 .v b { color: var(--accent); font-weight: 800; }
+
+  /* S24 */
+  #s24 .cols { position: absolute; left: var(--pad); right: var(--pad); top: 300px; columns: 2; column-gap: 72px; }
+  #s24 .grp { break-inside: avoid; margin-bottom: 34px; }
+  #s24 .grp h3 { margin: 0 0 12px; font: 700 33px/1 var(--font-pixel-s); color: var(--accent); -webkit-font-smoothing: none; }
+  #s24 .grp p { margin: 0; font: 500 26px/1.55 var(--font-sans); color: var(--ink2); }
+  #s24 .grp p .m { font-family: var(--font-mono); font-size: 22px; color: var(--muted); }
+  #s24 .cap { position: absolute; right: var(--pad); top: 120px; width: 231px; box-shadow: 0 0 0 4px var(--px-line), 0 0 0 8px var(--px-out); }
+</style>
+</head>
+<body>
+<main class="deck">
+
+  <!-- S01 · fullbleed-video(인트로) -->
+  <section class="slide" id="s01" data-layout="intro">
+    <video class="fill" id="introVideo" src="assets/intro.mp4" poster="assets/intro_poster.jpg" playsinline data-play data-restart></video>
+    <div class="end-cap"><span>Slotbound · Optima Arch</span></div>
+    <div class="src">출처: 개발자 LinkedIn(2026.11.15, 11.17)·스팀 공지 · 인트로의 방·슬롯 릴·건물 장면: 생성 영상(Higgsfield) · 게임 화면: Slotbound 공식 트레일러</div>
+    <button class="deck-start no-nav" type="button"><span>▶ 인트로 재생</span></button>
+    <aside class="notes">오늘 다룰 사례는 2026년 11월 13일 스팀에 나온 슬롯바운드입니다. 개발자 한 명이 1년 동안 만든 첫 게임이고, 출시 48시간 매출과 10만 장 판매를 개발자가 직접 LinkedIn에 올렸습니다. 이 숫자들이 어떻게 나왔는지 사람, 게임, 제작 과정, 확산 순서로 보겠습니다.</aside>
+  </section>
+
+  <!-- S02 · hero-number -->
+  <section class="slide" id="s02" data-layout="hero-number">
+    <video class="fill" src="assets/clips/C06.mp4" poster="assets/clips/C06.jpg" muted loop playsinline data-play data-restart></video>
+    <div class="vignette"></div>
+    <div class="hero-c">
+      <div class="kicker" data-anim="fade">출시 48시간</div>
+      <div class="gnum" data-anim="scale" data-delay="100"><span class="kc" data-kc="470000000" data-kc-dur="2200" data-kc-delay="300">4억 7천만</span><span class="unit">원</span></div>
+      <div class="hero-label" data-anim="fade" data-delay="2400">매출 · 개발자 발표 <span class="dim">(수수료·세금 차감 여부 미표기)</span></div>
+      <svg class="uline" width="1100" height="12" viewBox="0 0 1100 12"><path d="M0 6 H1100" stroke="var(--accent)" stroke-width="8" fill="none" pathLength="1" data-anim="draw" data-delay="2500" data-dur="700"/></svg>
+      <p class="body" data-anim="fade" data-delay="2600">개발자가 LinkedIn에 직접 올린 숫자(2026.11.15 13:23)</p>
+    </div>
+    <div class="minis">
+      <div class="card px px-gold" data-anim="rise" data-delay="2700"><div class="ci">출시 3일 반</div><div class="cv">10만 장</div><div class="cd">11.17 새벽 같은 계정에 "판매량 10만 장 돌파"</div></div>
+      <div class="card px" data-anim="rise" data-delay="2850"><div class="ci">개발 시작 → 출시</div><div class="cv">392일</div><div class="cd">1인 개발 · 개발자의 첫 게임</div></div>
+    </div>
+    <div class="src">출처: 개발자 LinkedIn, 2026.11.15 13:23 · 11.17 01:07 KST · 스팀 공지(2026.11.17)</div>
+    <aside class="notes">이 숫자는 개발자 본인이 11월 15일 LinkedIn에 올린 값입니다. 스팀 수수료나 세금을 뺀 값인지는 게시물에 적혀 있지 않아서 오늘은 "매출, 개발자 발표"로만 부르겠습니다. 이틀 뒤 새벽에는 판매량 10만 장을 넘겼다는 공지가 나왔는데, 출시 시각부터 세면 85시간 38분, 3일 반입니다.</aside>
+  </section>
+
+  <!-- S03 · chapter(C01) -->
+  <section class="slide" id="s03" data-layout="chapter">
+    <video class="fill" src="assets/clips/C01.mp4" poster="assets/clips/C01.jpg" muted loop playsinline data-play data-restart></video>
+    <div class="ch-dim"></div>
+    <div class="ch-wrap">
+      <div class="ch-part"><span data-type>PART 1</span><i class="cursor"></i></div>
+      <div class="ch-num" data-anim="pop" data-delay="400">01</div>
+      <h2 class="ch-title long" data-anim="wipe-up" data-delay="600">게임 개발 경험 없이 시작한<br>1인 개발자</h2>
+      <p class="ch-sub" data-anim="rise" data-delay="850">개발사·배급사 Optima Arch, 한국의 1인 개발자</p>
+    </div>
+    <aside class="notes">먼저 누가 만들었는지 보겠습니다. 공개된 1차 자료로 확인되는 것만 다룹니다.</aside>
+  </section>
+
+  <!-- S04 · split-media -->
+  <section class="slide" id="s04" data-layout="split-media">
+    <div class="s04-img" data-anim="wipe" data-dur="1100">
+      <img class="fill" src="assets/img/K1_room.jpg" alt="" data-loop="kenburns">
+      <div class="gen-label">생성 이미지(분위기 연출)</div>
+    </div>
+    <div class="part-tag">PART <b>1</b> 개발자</div>
+    <div class="split-text l">
+      <img class="capsule" src="assets/steam/capsule.jpg" alt="Slotbound 로고" data-anim="fade">
+      <h2 class="h-lg" data-anim="rise" data-delay="100">개발사도 배급사도<br>Optima Arch, 한 사람</h2>
+      <ul class="facts">
+        <li data-anim="left" data-delay="300">김민(Min Kim)의 LinkedIn 게시물 링크가 슬롯바운드 스팀 페이지로 연결된다</li>
+        <li data-anim="left" data-delay="420">스팀 개발사·배급사 표기는 둘 다 Optima Arch</li>
+        <li data-anim="left" data-delay="540">스토어 소개 "solo-developed", 개발자 공지 "my first game"</li>
+      </ul>
+      <div class="row" data-anim="fade" data-delay="750"><span class="tag gold">1인 개발 · 첫 게임</span><span class="tag">13개 언어 · Windows·Mac</span></div>
+    </div>
+    <div class="src">출처: 개발자 LinkedIn(2026.11.15), 스팀 스토어 앱 4459590·개발자 스팀 공지(2026.11.17 조회), 게임조선(2026.11.04, 한글 이름·한국 1인 개발사)·게임메카(2026.11.14) · 이미지: 생성 이미지(분위기 연출), 로고: Slotbound 스팀 스토어</div>
+    <aside class="notes">개발자는 김민 씨로, LinkedIn에서는 Min Kim이라는 이름을 씁니다. 숫자를 올린 LinkedIn 게시물의 링크는 슬롯바운드 스팀 페이지로 이어지고, 스팀에는 개발사와 배급사가 모두 Optima Arch로 적혀 있습니다. 스토어 소개와 개발자 공지 모두 혼자 만든 첫 게임이라고 밝힙니다. 한 사람이 13개 언어로 Windows와 Mac에 냈습니다.</aside>
+  </section>
+
+  <!-- S05 · quote -->
+  <section class="slide grid-bg" id="s05" data-layout="quote">
+    <div class="part-tag">PART <b>1</b> 개발자</div>
+    <div class="head">
+      <div class="kicker" data-anim="fade">개발자 스팀 공지 · 2026.11.11</div>
+      <div class="row">
+        <div class="gnum" data-roll="2025.10.17">2025.10.17</div>
+        <h2 class="h-md" data-anim="rise" data-delay="900">개발 경험 없이 시작했다</h2>
+      </div>
+    </div>
+    <div class="qcard px parch">
+      <img class="capsule" src="assets/steam/capsule.jpg" alt="">
+      <p class="q-en" data-anim="fade" data-delay="700">"I started developing Slotbound on October 17, 2025. I remember the exact date because it was the day I decided to try making my own game, despite having <mark class="mk">no experience as a game developer</mark>."</p>
+      <p class="qtext" data-anim="fade" data-delay="1000">"2025년 10월 17일에 Slotbound 개발을 시작했습니다. 게임 개발 경험이 없었지만 제 게임을 만들어 보기로 결심한 날이라 정확한 날짜를 기억합니다."</p>
+      <div class="qby" data-anim="fade" data-delay="1300">데모 때 <b>"8개월"</b>, 출시 때 <b>"1년"</b> — 같은 시작일에서 잰 기간</div>
+    </div>
+    <div class="src">출처: Optima Arch 스팀 공지 "A Personal Update on Slotbound's Delayed Release"(2026.11.11 18:22 KST), itch.io 데브로그(2026.06.28) · 로고: Slotbound 스팀 스토어</div>
+    <aside class="notes">출시 이틀 전 스팀 공지에서 개발자가 직접 쓴 문장입니다. 시작일을 정확히 적었고, 게임 개발 경험이 없었다고 밝혔습니다. 데모를 낼 때는 8개월, 출시 때는 1년이라고 말했는데 둘 다 이 날짜에서 잰 기간이라 서로 맞습니다. AI를 어떻게 썼는지는 3부에서 출처별로 나눠 보겠습니다.</aside>
+  </section>
+
+  <!-- S06 · chapter(C02) -->
+  <section class="slide" id="s06" data-layout="chapter">
+    <video class="fill" src="assets/clips/C02.mp4" poster="assets/clips/C02.jpg" muted loop playsinline data-play data-restart></video>
+    <div class="ch-dim"></div>
+    <div class="logo px px-media" data-anim="fade" data-delay="600"><img src="assets/steam/header.jpg" alt="Slotbound 공식 로고"></div>
+    <div class="ch-wrap">
+      <div class="ch-part flash" data-anim="fade">PART 2</div>
+      <div class="ch-num" data-anim="pop" data-delay="150">02</div>
+      <h2 class="ch-title long" data-anim="wipe" data-delay="350" data-dur="1000">슬롯을 돌려 유닛을 소환하는<br>디펜스 게임</h2>
+      <p class="ch-sub" data-anim="rise" data-delay="650">로그라이트 · 오토배틀러 · 디펜스</p>
+    </div>
+    <div class="src">이미지: Slotbound 스팀 스토어</div>
+    <aside class="notes">이제 무엇을 만들었는지 보겠습니다. 장르 이름이 세 개 붙는 게임인데, 실제 화면으로 하나씩 보겠습니다.</aside>
+  </section>
+
+  <!-- S07 · fullbleed-video -->
+  <section class="slide" id="s07" data-layout="fullbleed-video">
+    <video class="fill" id="trailerMain" src="assets/steam/trailer_01.mp4#t=4" poster="assets/img/tr_poster.jpg" muted loop playsinline data-play></video>
+    <div class="scrim"></div>
+    <div class="part-tag">PART <b>2</b> 게임</div>
+    <div class="left">
+      <div class="kicker" data-anim="fade">공식 트레일러</div>
+      <h2 class="h-md" data-anim="rise" data-delay="120">3×3 슬롯을 돌려 유닛을 소환하는<br>오토배틀러 디펜스</h2>
+      <div class="chips" data-anim="fade" data-delay="400">
+        <span class="tag gold">₩12,000 → ₩10,800</span><span>출시 할인 10%(11.26까지)</span>
+        <span class="tag">Windows·Mac</span><span class="tag">2026.11.13 출시(KST)</span>
+      </div>
+    </div>
+    <ul class="taglines">
+      <li data-t="6"><b>SPIN TO SUMMON</b><span>슬롯을 돌려 소환한다</span></li>
+      <li data-t="14"><b>CONTROL THE ODDS</b><span>확률을 조종한다</span></li>
+      <li data-t="30"><b>SURVIVE THE WAVES</b><span>웨이브를 버틴다</span></li>
+    </ul>
+    <div class="src">게임 화면: Slotbound 공식 트레일러(스팀 스토어) · 가격: 스팀 스토어 한국 가격, 2026.11.17 조회</div>
+    <aside class="notes">공식 트레일러입니다. 트레일러가 내세우는 문구는 세 개로, 슬롯을 돌려 소환하고, 확률을 조종하고, 웨이브를 버틴다는 내용입니다. 가격은 1만 2천 원이고 11월 26일까지 10% 할인 중입니다. 스토어에는 출시일이 11월 12일로 나오는데 이는 미국 태평양 시간 날짜이고, 한국 시간으로는 13일 오전에 출시됐습니다.</aside>
+  </section>
+
+  <!-- S08 · loop-diagram -->
+  <section class="slide grid-bg" id="s08" data-layout="loop-diagram">
+    <div class="part-tag">PART <b>2</b> 게임</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">한 판의 순서</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">돌리고, 소환하고, 흡수하고, 버틴다</h2>
+    </div>
+    <svg class="ring" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <g transform="rotate(-90 600 660)"><circle cx="600" cy="660" r="260" fill="none" stroke="var(--px-line)" stroke-width="8" pathLength="1" data-anim="draw" data-delay="200" data-dur="1400"/></g>
+      <path d="M600 610 V 500" stroke="var(--accent)" stroke-width="4" stroke-dasharray="8 8" fill="none" data-anim="fade" data-delay="1500"/>
+      <path d="M690 640 L 735 600" stroke="var(--accent)" stroke-width="4" stroke-dasharray="8 8" fill="none" data-anim="fade" data-delay="1500"/>
+    </svg>
+    <div class="orbit"></div>
+    <div class="node px" style="left:488px;top:304px" data-anim="pop" data-delay="300"><img class="th" src="assets/steam/ss_01.jpg" alt=""><div class="t"><i>01</i>스핀</div></div>
+    <div class="node px" style="left:735px;top:486px" data-anim="pop" data-delay="580"><img class="th" src="assets/steam/ss_02.jpg" alt=""><div class="t"><i>02</i>소환</div></div>
+    <div class="node px" style="left:641px;top:776px" data-anim="pop" data-delay="860"><img class="th" src="assets/steam/ss_08.jpg" alt=""><div class="t"><i>03</i>흡수</div></div>
+    <div class="node px" style="left:335px;top:776px" data-anim="pop" data-delay="1140"><img class="th" src="assets/steam/ss_05.jpg" alt=""><div class="t"><i>04</i>전투</div></div>
+    <div class="node px" style="left:241px;top:486px" data-anim="pop" data-delay="1420"><img class="th" src="assets/steam/ss_03.jpg" alt=""><div class="t"><i>05</i>보스</div></div>
+    <div class="center" data-anim="fade" data-delay="1500"><b>아이템·코어</b>로<br>확률 조종</div>
+    <div class="panel" data-anim="right" data-delay="500">
+      <div class="pv"><div class="px px-media"><img src="assets/steam/ss_01.jpg" alt="스핀 화면"></div><div class="cap"><div class="n">01 스핀</div><p>레버를 당겨 3×3 슬롯을 돌린다</p></div></div>
+      <div class="pv" data-step="1"><div class="px px-media"><img src="assets/steam/ss_02.jpg" alt="소환 화면"></div><div class="cap"><div class="n">02 소환</div><p>줄이 맞으면 유닛 소환, 무작위 능력치·각인(Imprint) 부여. 화면 속 "해골술사(전설) 확률 0.1%"는 예시 문구</p></div></div>
+      <div class="pv" data-step="2"><div class="px px-media"><img src="assets/steam/ss_08.jpg" alt="도감 화면"></div><div class="cap"><div class="n">03 흡수</div><p>다른 유닛을 흡수해 진화, 클래스가 갈라진다(승급 계보 "전사 &gt; 해적 &gt; 해적왕")</p></div></div>
+      <div class="pv" data-step="3"><div class="px px-media"><img src="assets/steam/ss_05.jpg" alt="전투 화면"></div><div class="cap"><div class="n">04 전투</div><p>웨이브 전투는 자동으로 진행된다</p></div></div>
+      <div class="pv" data-step="4"><div class="px px-media"><img src="assets/steam/ss_03.jpg" alt="보스 화면"></div><div class="cap"><div class="n">05 보스</div><p>심판 웨이브·보스 웨이브에서 살아남는다(보스 "천꼬리")</p></div></div>
+    </div>
+    <div class="src">출처: 스팀 스토어 게임 소개(2026.11.17 조회) · 이미지: Slotbound 스팀 스토어</div>
+    <aside class="notes">한 판은 다섯 단계로 돕니다. 슬롯을 돌려 유닛을 뽑고, 다른 유닛을 흡수시켜 진화시키고, 전투는 자동으로 진행됩니다. 화면에 소환 확률이 숫자로 뜨고, 아이템과 코어로 이 확률을 바꾸는 것이 트레일러의 "CONTROL THE ODDS"입니다. (클릭하면 오른쪽 화면이 단계별로 바뀝니다.)</aside>
+  </section>
+
+  <!-- S09 · grid-cards -->
+  <section class="slide" id="s09" data-layout="grid-cards">
+    <div class="part-tag">PART <b>2</b> 게임</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">콘텐츠 규모</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">유닛 120종 이상, 월드 6곳</h2>
+      <p class="sub cond" data-anim="fade" data-delay="250">출시 전 공식 트레일러(2026.10.28 등록) 화면 문구</p>
+    </div>
+    <div class="cards">
+      <div class="card px" data-anim="rise" data-delay="300"><div class="card-img"><img src="assets/steam/ss_08.jpg" alt="도감 화면"></div><div class="cv"><span data-count data-to="120" data-suffix="+" data-dur="900" data-delay="400">120+</span></div><div class="en">UNITS</div><div class="cd">유닛 120종 이상</div></div>
+      <div class="card px" data-anim="rise" data-delay="400"><div class="card-img"><video id="fateVideo" src="assets/steam/trailer_01.mp4#t=17" poster="assets/img/tr_fate.jpg" muted playsinline data-play></video></div><div class="cv"><span data-count data-to="15" data-dur="900" data-delay="500">15</span></div><div class="en">FATE STONES</div><div class="cd">운명석 15개</div></div>
+      <div class="card px" data-anim="rise" data-delay="500"><div class="card-img"><img src="assets/steam/ss_04.jpg" alt="아이템 카드 화면"></div><div class="cv"><span data-count data-to="60" data-suffix="+" data-dur="900" data-delay="600">60+</span></div><div class="en">ITEMS</div><div class="cd">아이템 60개 이상</div></div>
+      <div class="card px px-gold" data-anim="rise" data-delay="600"><div class="card-img"><div class="wstrip"><img src="assets/steam/ss_01.jpg" alt=""><img src="assets/steam/ss_02.jpg" alt=""><img src="assets/steam/ss_03.jpg" alt=""><img src="assets/steam/ss_06.jpg" alt=""></div></div><div class="cv"><span data-count data-to="6" data-dur="900" data-delay="700">6</span></div><div class="en">WORLDS</div><div class="cd">월드 6곳</div></div>
+    </div>
+    <div class="src">출처: Slotbound 공식 트레일러 화면 문구(스팀 스토어, 2026.10.28 등록본) · 이미지: Slotbound 스팀 스토어</div>
+    <aside class="notes">이 숫자들은 출시 2주 전에 올라온 공식 트레일러 화면 문구이고, 직접 센 값은 아닙니다. 유닛 120종 이상, 운명석 15개, 아이템 60개 이상, 월드 6곳입니다. 1인 개발 첫 게임의 출시 분량으로 소개된 규모입니다.</aside>
+  </section>
+
+  <!-- S10 · chapter(C03) -->
+  <section class="slide" id="s10" data-layout="chapter">
+    <video class="fill" src="assets/clips/C03.mp4" poster="assets/clips/C03.jpg" muted loop playsinline data-play data-restart></video>
+    <div class="ch-dim"></div>
+    <div class="ch-wrap">
+      <div class="ch-part" data-anim="fade">PART 3 · 제작 과정</div>
+      <div class="gnum"><span data-count data-to="392" data-dur="7000" data-delay="200">392</span><span class="unit day">일</span></div>
+      <h2 class="ch-title long" data-anim="wipe-up" data-delay="300">시작부터 출시까지</h2>
+      <p class="ch-sub" data-anim="rise" data-delay="500">2025.10.17 → 2026.11.13</p>
+    </div>
+    <div class="src">출처: Optima Arch 스팀 공지(2026.11.11, 11.13) · 일수는 계산값</div>
+    <aside class="notes">시작일과 출시일 사이는 392일입니다. 이 기간에 데모를 두 곳에 냈고, 스팀 빌드 심사에서 한 번 반려됐고, 출시 뒤에는 3일 반 동안 아홉 번 업데이트했습니다.</aside>
+  </section>
+
+  <!-- S11 · timeline -->
+  <section class="slide grid-bg" id="s11" data-layout="timeline">
+    <div class="part-tag">PART <b>3</b> 제작</div>
+    <div class="safe" style="bottom:auto;right:640px">
+      <div class="kicker" data-anim="fade">392일 타임라인</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">데모는 출시 126일 전,<br>위시리스트 10만은 47일 전</h2>
+    </div>
+    <div class="dcount" data-anim="fade" data-delay="200">
+      <div class="gnum s"><span data-count data-to="392" data-prefix="D+" data-dur="2400" data-delay="300">D+392</span></div>
+      <div class="sub">개발 시작일 기준 일수</div>
+    </div>
+    <svg width="1920" height="1080" viewBox="0 0 1920 1080" style="position:absolute;left:0;top:0;overflow:visible;pointer-events:none">
+      <path d="M300 620 H1800" stroke="var(--px-line)" stroke-width="8" fill="none" pathLength="1" data-anim="draw" data-delay="300" data-dur="2400"/>
+      <path d="M330 642 V654 H750 V642" stroke="var(--accent)" stroke-width="4" fill="none" pathLength="1" data-anim="draw" data-delay="2200" data-dur="600"/>
+      <path d="M330 662 V682 H1800 V662" stroke="var(--accent)" stroke-width="4" fill="none" pathLength="1" data-anim="draw" data-delay="2400" data-dur="800"/>
+    </svg>
+    <div class="bk" style="left:500px;top:642px" data-anim="fade" data-delay="2600">"8개월"</div>
+    <div class="bk" style="left:1010px;top:670px" data-anim="fade" data-delay="2800">"1년"</div>
+    <div class="dot key" style="left:330px" data-anim="pop" data-delay="300"></div>
+    <div class="dot" style="left:540px" data-anim="pop" data-delay="600"></div>
+    <div class="dot" style="left:750px" data-anim="pop" data-delay="900"></div>
+    <div class="dot key" style="left:960px" data-anim="pop" data-delay="1200"></div>
+    <div class="dot" style="left:1170px" data-anim="pop" data-delay="1450"></div>
+    <div class="dot key" style="left:1380px" data-anim="pop" data-delay="1700"></div>
+    <div class="dot" style="left:1590px" data-anim="pop" data-delay="1950"></div>
+    <div class="dot key" style="left:1800px" data-anim="pop" data-delay="2200"></div>
+    <div class="lab up key" style="left:140px" data-anim="rise" data-delay="350"><div class="dt">2025.10.17</div><div class="dd">D+0</div><div class="tx">개발 시작</div></div>
+    <div class="lab dn" style="left:350px" data-anim="rise" data-delay="650"><div class="dt">2026.05.22</div><div class="dd">D+217</div><div class="tx">Reddit r/aigamedev에 개발 소감 게시</div><div class="cn">opgg.news 보도 경유</div></div>
+    <div class="lab up" style="left:560px" data-anim="rise" data-delay="950"><div class="dt">2026.06.28</div><div class="dd">D+254</div><div class="tx">itch.io 데모·데브로그 "8개월"</div></div>
+    <div class="lab dn key" style="left:770px" data-anim="rise" data-delay="1250"><div class="dt">2026.07.10</div><div class="dd">D+266 · 출시 126일 전</div><div class="tx">스팀 데모 공개</div></div>
+    <div class="lab up" style="left:980px" data-anim="rise" data-delay="1500"><div class="dt">2026.07.28</div><div class="dd">D+284</div><div class="tx">위시리스트 5만</div></div>
+    <div class="lab dn key" style="left:1190px" data-anim="rise" data-delay="1750"><div class="dt">2026.09.27</div><div class="dd">D+345 · 출시 47일 전</div><div class="tx">위시리스트 10만, 11.10 얼리 액세스 출시 발표</div><div class="cn">5만 → 10만, 61일</div></div>
+    <div class="lab up" style="left:1400px" data-anim="rise" data-delay="2000"><div class="dt">2026.10.05</div><div class="dd">D+353</div><div class="tx">v0.4.0 대형 업데이트(Jester 유닛, 2스테이지, 언어 8개 추가)</div></div>
+    <div class="lab dn key" style="left:1500px;width:300px;text-align:right" data-anim="rise" data-delay="2250"><div class="dt">2026.11.13</div><div class="dd">D+392</div><div class="tx">1.0 출시 "1년"</div><img class="cap7" src="assets/steam/capsule.jpg" alt=""></div>
+    <div class="src">출처: Optima Arch 스팀 공지·itch.io 데브로그, opgg.news(2026.05.23, Reddit 글 인용) · 일수는 계산값 · 로고: Slotbound 스팀 스토어</div>
+    <aside class="notes">개발자가 데모 때 말한 8개월과 출시 때 말한 1년은 같은 시작일에서 잰 시점 차이입니다. 스팀 데모는 출시 126일 전에 나왔고, 위시리스트는 두 달 만에 5만에서 10만이 됐습니다. 10만을 넘긴 날은 출시 47일 전입니다.</aside>
+  </section>
+
+  <!-- S12 · grid-cards -->
+  <section class="slide" id="s12" data-layout="grid-cards">
+    <div class="part-tag">PART <b>3</b> 제작</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">AI 사용 범위</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">AI 사용 범위, 스토어와 itch.io에 직접 표기했다</h2>
+    </div>
+    <div class="cards">
+      <div class="card px" data-anim="drop" data-delay="250">
+        <div class="lbl"><span class="tag dev">개발자 고지</span><span class="who">itch.io 게임 페이지</span></div>
+        <div class="cd"><b>"AI Assisted"</b> — Code · Graphics · Sounds</div>
+        <i class="step-glow" data-step="1"></i>
+      </div>
+      <div class="card px" data-anim="drop" data-delay="400">
+        <div class="lbl"><span class="tag dev">개발자 고지</span><span class="who">스팀 스토어</span></div>
+        <div class="cd">시각 에셋·홍보물 일부를 생성형 AI 도구 도움으로 제작, 개발자가 모두 검토·수정. 게임 중 실시간 생성형 AI 없음(데모 고지)</div>
+        <i class="step-glow" data-step="2"></i>
+      </div>
+      <div class="card px" data-anim="blur" data-delay="900">
+        <div class="lbl"><span class="tag press">보도 인용</span><span class="who">opgg.news</span></div>
+        <div class="cd"><b>"코드는 100% AI가 생성, 코드를 한 줄도 쓰지 못한다"</b> · 본인 역할은 디렉션·밸런싱·시각 일관성</div>
+        <div class="cond">2026.05.22 Reddit 글을 opgg.news가 옮긴 것</div>
+        <i class="step-glow" data-step="3"></i>
+      </div>
+      <div class="card px" data-anim="blur" data-delay="900">
+        <div class="lbl"><span class="tag press">보도 인용</span><span class="who">게임조선</span></div>
+        <div class="cd"><b>"AI를 적극적으로 활용한 것은 맞지만 전부 AI로 만들어진 게임은 아니며 사람의 수작업도 상당히 많이 들어갔다"</b></div>
+        <div class="cond">게임조선(2026.11.04) 개발자 인용</div>
+        <i class="step-glow" data-step="4"></i>
+      </div>
+    </div>
+    <div class="src">출처: optimaarch.itch.io/slotbound, 스팀 스토어 AI 고지(2026.11.17 조회), opgg.news(2026.05.23, Reddit 글 인용), 게임조선(2026.11.04)</div>
+    <aside class="notes">AI 사용은 개발자가 itch.io와 스팀 스토어에 직접 표기했습니다. "코드는 전부 AI가 썼다"는 말은 5월 Reddit 글을 기사가 옮긴 것이고, 11월 국내 기사에서는 사람이 직접 한 작업도 많다고 말해 강조점이 다릅니다. 해외 기사 한 곳은 개발자 말을 인용해 Cursor, ChatGPT, Claude, Gemini를 번갈아 썼다고 전합니다(iXBT 2026.11.14, 단일 출처). (클릭할 때마다 카드 하나씩 테두리가 켜집니다.)</aside>
+  </section>
+
+  <!-- S13 · timeline(간트) -->
+  <section class="slide grid-bg" id="s13" data-layout="timeline">
+    <div class="part-tag">PART <b>3</b> 제작</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker k-red" data-anim="fade">스팀 빌드 심사</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">스팀 안내는 4~5일, 첫 심사는 13일 만에 반려</h2>
+    </div>
+    <!-- 날짜 축: x = 560 + (10.16부터 일수) × 42.76 -->
+    <div class="rl" style="top:346px" data-anim="fade" data-delay="200">스팀 안내 심사 기간<small>보통 4~5일, 최대 7일</small></div>
+    <div class="bar gray" style="left:646px;top:350px;width:214px" data-anim="wipe" data-delay="300" data-dur="400"></div>
+    <div class="bar gray2" style="left:860px;top:350px;width:86px" data-anim="wipe" data-delay="650" data-dur="250"></div>
+    <div class="bv" style="left:966px;top:356px" data-anim="fade" data-delay="800">4~5일<small>(최대 7일)</small></div>
+
+    <div class="rl" style="top:456px" data-anim="fade" data-delay="300">빌드 첫 제출<small>10.18</small></div>
+    <div class="bar red" style="left:646px;top:460px;width:556px" data-anim="wipe" data-delay="900" data-dur="1600"></div>
+    <div class="bv" style="left:1222px;top:466px" data-anim="fade" data-delay="2400">13일<small>만에 반려</small></div>
+
+    <div class="rl" style="top:566px" data-anim="fade" data-delay="400">곧바로 재제출<small>10월 말</small></div>
+    <div class="bar red" style="left:1159px;top:570px;width:513px" data-anim="wipe" data-delay="1400" data-dur="1400"></div>
+    <div class="bar dash" style="left:1672px;top:570px;width:86px" data-anim="wipe" data-delay="2700" data-dur="300"></div>
+    <div class="inbar" style="left:1159px;top:570px" data-anim="fade" data-delay="2600">11.11 기준 <b>12일째</b> 심사 중</div>
+
+    <div class="vl" style="left:1628px;top:330px;height:360px;background:var(--danger)" data-anim="wipe-up" data-delay="2300" data-dur="500"></div>
+    <div class="vtag" style="right:300px;top:292px" data-anim="fade" data-delay="2500"><b>11.10</b> 예정 출시일 · 06:13 <span class="shake tag red">연기</span> 공지</div>
+    <div class="vl" style="left:1755px;top:330px;height:360px;background:var(--accent)" data-anim="wipe-up" data-delay="2700" data-dur="500"></div>
+
+    <div class="axis" data-anim="wipe" data-delay="150" data-dur="800"></div>
+    <div class="tick" style="left:646px">10.18</div>
+    <div class="tick" style="left:945px">10.25</div>
+    <div class="tick" style="left:1244px">11.01</div>
+    <div class="tick" style="left:1543px">11.08</div>
+    <div class="tick" style="left:1757px;color:var(--accent)">11.13</div>
+
+    <div class="bottom">
+      <div class="card px px-red" data-anim="rise" data-delay="2800"><div class="cv">3일</div><div class="cd">출시 연기<br><span class="mono" style="color:var(--muted)">11.10 → 11.13</span></div></div>
+      <div class="card px" data-anim="rise" data-delay="2950"><div class="cd" style="color:var(--ink)"><b class="hl">11.13 11:06</b> 출시. 예정했던 얼리 액세스가 아닌 <b class="hl">1.0</b><br><span style="color:var(--muted)">바꾼 이유는 공지에 없음</span></div></div>
+    </div>
+    <div class="src">출처: Optima Arch 스팀 공지(2026.11.10 06:13, 11.11 18:22, 11.13 11:06 KST) · 심사 기간은 개발자 공지 기준</div>
+    <aside class="notes">개발자는 10월 18일에 빌드를 냈는데 13일 만에 반려됐고, 곧바로 다시 낸 빌드도 11월 11일까지 12일째 심사 중이었다고 밝혔습니다. 스팀이 안내하는 보통 심사 기간은 4일에서 5일입니다. 그래서 11월 10일 출시가 13일로 밀렸고, 개발자는 연기를 이유로 서포터 팩을 팔지 않기로 했습니다. 같은 공지에서 요즘 잠을 많이 못 잔다고도 썼습니다.</aside>
+  </section>
+
+  <!-- S14 · hero-number -->
+  <section class="slide" id="s14" data-layout="hero-number">
+    <img class="bgimg" src="assets/steam/ss_05.jpg" alt="">
+    <div class="part-tag">PART <b>3</b> 제작</div>
+    <div class="lft">
+      <div class="kicker" data-anim="fade">출시 후 업데이트</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">출시 후 3일 반,<br>업데이트 9회</h2>
+      <div class="gnum"><span data-count data-to="9" data-dur="2700" data-delay="200" data-format="raw">9</span><span class="unit">회</span></div>
+    </div>
+    <div class="rgt">
+      <p class="body" style="color:var(--ink)" data-anim="rise" data-delay="300">출시 다음 날 난이도 완화 3회, 튀르키예어 추가, 패배한 판에도 재화 일부 지급</p>
+      <div class="qmini px parch" data-anim="rise" data-delay="500"><p class="ko">"출시 후 업데이트를 9번 냈고, 대부분은 여러분의 제보와 제안에서 나왔습니다."</p><p class="en">"Since launch I've released nine updates, and most of them came from your reports and suggestions."</p><div class="by">— Optima Arch, 스팀 공지(2026.11.17 00:44 KST)</div></div>
+    </div>
+    <div class="tip"></div>
+    <div class="tk" style="left:120px">+0h · 11.13 11:06</div>
+    <div class="tk" style="left:568px">+24h</div>
+    <div class="tk" style="left:1016px">+48h</div>
+    <div class="tk" style="left:1464px">+72h</div>
+    <div class="axis" data-anim="wipe" data-delay="150" data-dur="1000"></div>
+    <!-- x = 120 + 경과시간 × 18.67 -->
+    <div class="dotw" style="left:193px" data-anim="drop" data-delay="300"><div class="d no-nav" data-tip="(1) +3.9h 핫픽스"></div></div>
+    <div class="dotw" style="left:271px" data-anim="drop" data-delay="600"><div class="d no-nav" data-tip="(2) +8.1h 핫픽스"></div></div>
+    <div class="dotw" style="left:316px" data-anim="drop" data-delay="900"><div class="d no-nav" data-tip="(3) +10.5h 핫픽스"></div></div>
+    <div class="dotw" style="left:419px" data-anim="drop" data-delay="1200"><div class="d no-nav" data-tip="(4) +16.0h 1·2스테이지 난이도 완화"></div></div>
+    <div class="dotw" style="left:712px" data-anim="drop" data-delay="1500"><div class="d no-nav" data-tip="(5) +31.7h 전체 난이도 완화"></div></div>
+    <div class="dotw" style="left:744px" data-anim="drop" data-delay="1800"><div class="d no-nav" data-tip="(6) +33.4h 첫 보스 난이도 완화"></div></div>
+    <div class="dotw" style="left:1113px" data-anim="drop" data-delay="2100"><div class="d no-nav" data-tip="(7) +53.2h 업그레이드 재화 증가"></div></div>
+    <div class="dotw" style="left:1272px" data-anim="drop" data-delay="2400"><div class="d no-nav" data-tip="(8) +61.7h 튀르키예어 추가"></div></div>
+    <div class="dotw" style="left:1709px" data-anim="drop" data-delay="2700"><div class="d no-nav" data-tip="(9) +85.1h 패배한 판에도 재화 일부 지급"></div></div>
+    <div class="gl" style="left:150px;top:836px" data-anim="fade" data-delay="2800"><b>(1)~(3)</b> 핫픽스</div>
+    <div class="gl" style="left:410px;top:836px" data-anim="fade" data-delay="2800"><b>(4)~(6)</b> 난이도 완화</div>
+    <div class="gl" style="left:960px;top:836px" data-anim="fade" data-delay="2800"><b>(7)</b> 업그레이드 재화 증가</div>
+    <div class="gl" style="left:1180px;top:888px" data-anim="fade" data-delay="2800"><b>(8)</b> 튀르키예어 추가</div>
+    <div class="gl" style="right:120px;top:836px;text-align:right" data-anim="fade" data-delay="2800"><b>(9)</b> 패배한 판에도 재화 일부 지급<br><span style="color:var(--muted);font-size:24px">+85.1h, 10만 장 공지 직전</span></div>
+    <div class="src">출처: Optima Arch 스팀 공지 v1.0.0 (1)~(9), "Slotbound Has Sold 100,000 Copies! Thank You!"(2026.11.17 00:44 KST) · 경과 시간은 계산값 · 배경: Slotbound 스팀 스토어</div>
+    <aside class="notes">출시 4시간이 안 돼 첫 핫픽스가 나왔고, 10만 장 공지 직전까지 3일 반 동안 아홉 번 업데이트했습니다. 출시 다음 날에만 난이도를 세 번 낮췄습니다. 개발자는 업데이트 대부분이 이용자 제보와 제안에서 나왔다고 밝혔습니다. (점을 클릭하면 해당 업데이트 내용이 뜹니다.)</aside>
+  </section>
+
+  <!-- S15 · chapter(C04) -->
+  <section class="slide" id="s15" data-layout="chapter">
+    <video class="fill" src="assets/clips/C04.mp4" poster="assets/clips/C04.jpg" muted loop playsinline data-play data-restart></video>
+    <div class="ch-dim"></div>
+    <div class="ch-wrap">
+      <div class="ch-part" data-anim="fade">PART 4 · 확산</div>
+      <div class="ch-num" data-anim="pop" data-delay="100">04</div>
+      <h2 class="ch-title long" data-split="300">출시 후 <span class="hl">85시간 38분</span>의 기록</h2>
+      <div class="flow">
+        <span data-anim="fade" data-delay="1300">1.0 공개</span>
+        <svg width="64" height="24" viewBox="0 0 64 24"><path d="M2 12 H56 M46 2 L58 12 L46 22" stroke="var(--accent)" stroke-width="5" fill="none" pathLength="1" data-anim="draw" data-delay="1450" data-dur="500"/></svg>
+        <span data-anim="fade" data-delay="1700"><span class="hl">4억 7천만 원</span> 게시</span>
+        <svg width="64" height="24" viewBox="0 0 64 24"><path d="M2 12 H56 M46 2 L58 12 L46 22" stroke="var(--accent)" stroke-width="5" fill="none" pathLength="1" data-anim="draw" data-delay="1850" data-dur="500"/></svg>
+        <span data-anim="fade" data-delay="2100"><span class="hl">10만 장</span> 공지</span>
+      </div>
+    </div>
+    <div class="src">출처: Optima Arch 스팀 공지, 개발자 LinkedIn · 시간은 계산값</div>
+    <aside class="notes">이제 숫자가 어떤 순서로 나왔고 어떻게 퍼졌는지 보겠습니다. 시간 기준은 개발자가 1.0 출시를 알린 11월 13일 오전 11시 6분입니다.</aside>
+  </section>
+
+  <!-- S16 · chart -->
+  <section class="slide" id="s16" data-layout="chart">
+    <div class="part-tag">PART <b>4</b> 확산</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">출시 후 시간축</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">동시 접속자는 날마다 늘어 11.16 밤 2만 2,500명 이상</h2>
+    </div>
+    <!-- 시간축 x = 120 + 경과시간 × 16.15 (0~104h) -->
+    <div class="dayband" style="left:120px;width:208px"></div>
+    <div class="dayband alt" style="left:328px;width:388px"></div>
+    <div class="dayband" style="left:716px;width:388px"></div>
+    <div class="dayband alt" style="left:1104px;width:387px"></div>
+    <div class="dayband" style="left:1491px;width:309px"></div>
+    <div class="axis" data-anim="wipe" data-delay="200" data-dur="900"></div>
+    <div class="flag" style="left:118px;top:300px;height:178px" data-anim="wipe-up" data-delay="400" data-dur="300"></div>
+    <div class="fl" style="left:134px;top:298px" data-anim="fade" data-delay="500"><b>+0h</b> 1.0 공개<br><span style="color:var(--muted)">11.13 11:06</span></div>
+    <div class="flag" style="left:181px;top:400px;height:78px" data-anim="wipe-up" data-delay="600" data-dur="300"></div>
+    <div class="fl" style="left:197px;top:404px" data-anim="fade" data-delay="700"><b>+3.9h</b> 첫 핫픽스</div>
+    <div class="flag" style="left:930px;top:400px;height:78px" data-anim="wipe-up" data-delay="800" data-dur="300"></div>
+    <div class="fl" style="left:946px;top:388px" data-anim="fade" data-delay="900"><b>+50.3h</b> LinkedIn<br>"48시간 매출 4억 7천만 원"</div>
+    <div class="flag" style="left:1500px;top:300px;height:178px" data-anim="wipe-up" data-delay="1000" data-dur="300"></div>
+    <div class="fl r" style="right:436px;top:298px" data-anim="fade" data-delay="1100"><b>+85.6h</b> 스팀 공지<br>"10만 장" · <b>+86.0h</b> LinkedIn</div>
+    <div class="ctitle" data-anim="fade" data-delay="1200">날짜별 최고 동시 접속자 · Steam Charts 시간 단위 표본(11.14 03:15부터 수집, 11.17은 17:02까지)</div>
+    <!-- 막대: 최대 300px = 22,526명 -->
+    <div class="pb dashed" style="left:169px;height:33px" data-anim="wipe-up" data-delay="1300" data-dur="400"></div>
+    <div class="pv" style="left:224px;bottom:225px" data-anim="fade" data-delay="1500">2,500명 이상<small>러시아 매체 보도(PlayGround.ru)<br>출시 약 7시간 뒤</small></div>
+    <div class="pb" style="left:467px;height:122px" data-anim="wipe-up" data-delay="1450" data-dur="500"></div>
+    <div class="pv" style="left:522px;bottom:314px" data-anim="fade" data-delay="1800">9,131명</div>
+    <div class="pb" style="left:855px;height:203px" data-anim="wipe-up" data-delay="1600" data-dur="600"></div>
+    <div class="pv" style="left:910px;bottom:395px" data-anim="fade" data-delay="2000">1만 5,265명</div>
+    <div class="pb max" style="left:1243px;height:300px" data-anim="wipe-up" data-delay="1750" data-dur="700"></div>
+    <div class="pv max" style="left:1298px;bottom:504px"><span data-kc="22526" data-kc-fmt="man" data-kc-dur="1200" data-kc-delay="1900">2만 2,526</span>명<small>역대 최고 · 11.16 23:02</small></div>
+    <div class="pb" style="left:1510px;height:275px" data-anim="wipe-up" data-delay="1900" data-dur="600"></div>
+    <div class="pv" style="left:1565px;bottom:467px" data-anim="fade" data-delay="2300">2만 621명<small>17:02까지</small></div>
+    <div class="nowline" style="left:1504px;width:296px;top:654px" data-anim="fade" data-delay="2400"></div>
+    <div class="nowlab" style="left:1636px;top:666px" data-anim="fade" data-delay="2400">17:33 현재<br><b>1만 8,482</b>명</div>
+    <div class="dlab" style="left:224px">11.13</div>
+    <div class="dlab" style="left:522px">11.14</div>
+    <div class="dlab" style="left:910px">11.15</div>
+    <div class="dlab" style="left:1298px">11.16</div>
+    <div class="dlab" style="left:1565px">11.17</div>
+    <div class="src">출처: 스팀 공지·개발자 LinkedIn, Steam Charts(2026.11.17 조회), Steam API(2026.11.17 17:33 KST), PlayGround.ru(2026.11.13) · 시간은 계산값</div>
+    <aside class="notes">개발자가 말한 48시간 매출 게시물은 1.0 공개 뒤 50시간쯤에 올라왔고, 10만 장 공지는 85시간 38분 뒤에 나왔습니다. 동시 접속자의 날짜별 최고값은 14일 9천 명대, 15일 1만 5천 명대, 16일 밤 2만 2,500명 이상으로 날마다 늘었습니다. 첫날 값은 러시아 매체 한 곳의 보도뿐이라 점선으로 표시했습니다.</aside>
+  </section>
+
+  <!-- S17 · chart -->
+  <section class="slide grid-bg" id="s17" data-layout="chart">
+    <div class="part-tag">PART <b>4</b> 확산</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">두 발표 수치 대조</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">₩470,000,000 ÷ 장당 가격 = 약 3.9만 장 이상</h2>
+    </div>
+    <!-- 막대 x 900~1700: 100,000장 = 800px -->
+    <div class="fr" style="top:368px"><div class="f"><span data-anim="fade" data-delay="200">₩470,000,000</span><span class="op" data-anim="fade" data-delay="320">÷</span><span class="gold" data-anim="fade" data-delay="440">₩12,021</span><span class="op" data-anim="fade" data-delay="560">=</span></div><div class="s">미국 할인가 8.99달러, 11.13 환율</div></div>
+    <div class="cb" style="top:372px;width:313px" data-anim="wipe" data-delay="600" data-dur="600"></div>
+    <div class="cv2" style="left:1230px;top:372px"><span data-count data-to="39099" data-suffix="장" data-dur="600" data-delay="600">39,099장</span></div>
+    <div class="fr" style="top:498px"><div class="f"><span data-anim="fade" data-delay="900">₩470,000,000</span><span class="op" data-anim="fade" data-delay="1000">÷</span><span class="gold" data-anim="fade" data-delay="1100">₩12,000</span><span class="op" data-anim="fade" data-delay="1200">=</span></div><div class="s">한국 정가</div></div>
+    <div class="cb" style="top:502px;width:313px" data-anim="wipe" data-delay="1250" data-dur="600"></div>
+    <div class="cv2" style="left:1230px;top:502px"><span data-count data-to="39167" data-suffix="장" data-dur="600" data-delay="1250">39,167장</span></div>
+    <div class="fr" style="top:628px"><div class="f"><span data-anim="fade" data-delay="1500">₩470,000,000</span><span class="op" data-anim="fade" data-delay="1600">÷</span><span class="gold" data-anim="fade" data-delay="1700">₩10,800</span><span class="op" data-anim="fade" data-delay="1800">=</span></div><div class="s">한국 출시 할인가</div></div>
+    <div class="cb" style="top:632px;width:348px" data-anim="wipe" data-delay="1850" data-dur="600"></div>
+    <div class="cv2" style="left:1265px;top:632px"><span data-count data-to="43519" data-suffix="장" data-dur="600" data-delay="1850">43,519장</span></div>
+    <div class="fr" style="top:768px"><div class="f" style="color:var(--accent3)" data-anim="fade" data-delay="2200">85시간 38분 시점 개발자 발표</div><div class="s">스팀 공지·LinkedIn(2026.11.17)</div></div>
+    <div class="cb green" style="top:772px;width:800px" data-anim="wipe" data-delay="2300" data-dur="900"></div>
+    <div class="cv2 in" style="left:900px;width:780px;top:772px" data-anim="fade" data-delay="2900">100,000장</div>
+    <div class="brk">
+      <svg width="40" height="340" viewBox="0 0 40 340" style="overflow:visible"><path d="M0 4 H24 V328 H0" stroke="var(--accent)" stroke-width="6" fill="none" pathLength="1" data-anim="draw" data-delay="2500" data-dur="600"/><path d="M24 166 H40" stroke="var(--accent)" stroke-width="6" fill="none" pathLength="1" data-anim="draw" data-delay="2900" data-dur="200"/></svg>
+      <div class="bt" data-anim="fade" data-delay="2900">약 3.9만~4.4만 장<small>+ 지역 가격이 낮은 나라 판매 ↓</small></div>
+    </div>
+    <div class="bottomline" data-anim="fade" data-delay="3000">지역 가격이 낮은 나라의 판매가 섞이면 장수는 더 늘어난다. 두 발표 수치는 서로 어긋나지 않는다</div>
+    <div class="src">출처: 개발자 LinkedIn(2026.11.15, 11.17), 스팀 스토어 한국·미국 가격(2026.11.17 조회), 환율 ECB 기준값(2026.11.13) · 장 수는 계산값</div>
+    <aside class="notes">4억 7천만 원을 한국·미국 가격으로 나누면 약 3만 9천 장에서 4만 4천 장입니다. 해외 지역 가격은 더 낮은 경우가 많아서 실제 장수는 이보다 많을 수 있습니다. 같은 계산으로 보면 48시간 이후 하루 반 동안 남은 5만여 장이 팔린 셈이라 판매 속도는 첫 이틀보다 빨랐고, 동시 접속자가 날마다 늘어난 흐름과 방향이 같습니다. 10만 장의 매출액은 지역별 판매 비중을 몰라 계산하지 않았습니다.</aside>
+  </section>
+
+  <!-- S18 · grid-cards -->
+  <section class="slide" id="s18" data-layout="grid-cards">
+    <img class="bgimg" src="assets/img/K3_windows.jpg" alt="">
+    <div class="gen-label">생성 이미지(분위기 연출)</div>
+    <div class="part-tag">PART <b>4</b> 확산</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">알려진 경로</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">개발자가 먼저 올렸고, 해외 보도 일부는 그 글을 인용했다</h2>
+    </div>
+    <svg class="ln" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <path d="M720 630 C 790 630, 790 420, 856 420" stroke="var(--accent)" stroke-width="4" fill="none" pathLength="1" data-anim="draw" data-delay="500" data-dur="500"/>
+      <path d="M720 630 H 856" stroke="var(--accent)" stroke-width="4" fill="none" pathLength="1" data-anim="draw" data-delay="800" data-dur="400"/>
+      <path d="M720 630 C 790 630, 790 840, 856 840" stroke="var(--accent)" stroke-width="4" fill="none" pathLength="1" data-anim="draw" data-delay="1100" data-dur="500"/>
+    </svg>
+    <div class="devcard px px-green" data-anim="left" data-delay="200">
+      <div class="lbl"><span class="tag" style="background:var(--accent3);color:#1d2410">개발자 채널</span></div>
+      <ul>
+        <li>Reddit r/aigamedev<small>05.22</small></li>
+        <li>itch.io 데브로그<small>06.28</small></li>
+        <li>Threads · X</li>
+        <li>스팀 공지<small>위시리스트·연기·출시·판매</small></li>
+        <li>LinkedIn<small>11.15, 11.17</small></li>
+      </ul>
+    </div>
+    <div class="rc px" style="top:330px" data-anim="pop" data-delay="900"><div class="ct">해외 보도</div><div class="cd">opgg.news <small>05.23, Reddit 글 인용</small> · iXBT <small>07.27, 11.14</small> · PlayGround.ru <small>11.13</small></div></div>
+    <div class="rc px" style="top:540px" data-anim="pop" data-delay="1150"><div class="ct">국내 보도</div><div class="cd">게임메카·게임조선 <small>11.04 중국 유사작 피해, 개발자 주장</small> · 게임메카 <small>11.14 출시 소개</small></div></div>
+    <div class="rc px px-gold" style="top:750px" data-anim="pop" data-delay="1400"><div class="ct">LinkedIn 반응 <small style="font:500 24px var(--font-sans);color:var(--muted)">2026.11.17 17:40 조회</small></div><div class="cd">4.7억 게시물 반응 <span class="hl"><span data-count data-to="1970" data-dur="1200" data-delay="1500">1,970</span></span> · 댓글 <span class="hl">66</span> &nbsp;/&nbsp; 10만 장 게시물 반응 <span class="hl">228</span> · 댓글 <span class="hl">18</span></div></div>
+    <div class="src">출처: 개발자 각 채널, opgg.news(2026.05.23), iXBT(2026.07.27, 11.14), PlayGround.ru(2026.11.13), 게임메카(2026.11.04, 11.14), 게임조선(2026.11.04), LinkedIn(2026.11.17 17:40 조회) · 이미지: 생성 이미지(분위기 연출)</div>
+    <aside class="notes">개발자는 출시 반년 전부터 Reddit, itch.io, Threads, X, 스팀 공지에 개발 과정을 직접 올렸습니다. 5월 Reddit 글은 다음 날 opgg.news 기사가 됐고, 해외 기사 여러 건이 같은 글을 인용했습니다. 국내 기사 두 곳은 출시 전 중국 미니게임 플랫폼에 유사작이 나왔다는 개발자 주장을 다뤘습니다. 출시 후 LinkedIn 첫 게시물은 반응 1,970건을 받았습니다.</aside>
+  </section>
+
+  <!-- S19 · chart -->
+  <section class="slide grid-bg" id="s19" data-layout="chart">
+    <div class="part-tag">PART <b>4</b> 확산</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">스팀 리뷰</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">리뷰 935건, 긍정 비율은 첫날 87%에서 79%로</h2>
+    </div>
+    <div class="ptitle" style="left:120px" data-anim="fade" data-delay="200">누적 긍정 비율<small>세로축 70~90%</small></div>
+    <div class="ptitle" style="left:1040px" data-anim="fade" data-delay="200">날짜별 신규 리뷰 긍정 비율<small>세로축 0~100%</small></div>
+    <!-- 왼쪽: y = 360 + (90 - v)/20 × 360, x = 190 + i×165 -->
+    <svg class="ch" width="1920" height="1080" viewBox="0 0 1920 1080">
+      <path d="M140 720 H900" stroke="var(--px-line)" stroke-width="4"/>
+      <path d="M140 540 H900" stroke="rgba(243,236,216,.12)" stroke-width="2"/>
+      <path d="M140 360 H900" stroke="rgba(243,236,216,.12)" stroke-width="2"/>
+      <path d="M140 504 H900" stroke="#c4a2ff" stroke-width="3" stroke-dasharray="10 8" data-anim="fade" data-delay="1600"/>
+      <path d="M190 419.4 L355 489.6 L520 558 L685 556.2 L850 550.8" stroke="var(--accent)" stroke-width="6" fill="none" pathLength="1" data-anim="draw" data-delay="400" data-dur="1400"/>
+      <g fill="var(--accent)">
+        <rect x="180" y="409" width="20" height="20"/><rect x="345" y="480" width="20" height="20"/><rect x="510" y="548" width="20" height="20"/><rect x="675" y="546" width="20" height="20"/><rect x="840" y="541" width="20" height="20"/>
+      </g>
+      <path d="M1040 720 H1800" stroke="var(--px-line)" stroke-width="4"/>
+    </svg>
+    <div class="sub" style="position:absolute;left:96px;top:348px;font-size:20px">90%</div>
+    <div class="sub" style="position:absolute;left:96px;top:528px;font-size:20px">80%</div>
+    <div class="sub" style="position:absolute;left:96px;top:708px;font-size:20px">70%</div>
+    <div class="demo" style="left:700px;top:470px" data-anim="fade" data-delay="1600">데모 82%(771건)</div>
+    <div class="pl" style="left:190px;top:368px" data-anim="fade" data-delay="500">86.7%</div>
+    <div class="pl ink" style="left:355px;top:438px" data-anim="fade" data-delay="750">82.8%</div>
+    <div class="pl ink" style="left:520px;top:590px" data-anim="fade" data-delay="1000">79.0%</div>
+    <div class="pl ink" style="left:685px;top:590px" data-anim="fade" data-delay="1200">79.1%</div>
+    <div class="pl" style="left:850px;top:590px" data-anim="fade" data-delay="1400">79.4%</div>
+    <div class="xl" style="left:190px">11.13<br><b>211건</b></div>
+    <div class="xl" style="left:355px">11.14<br><b>436건</b></div>
+    <div class="xl" style="left:520px">11.15<br><b>672건</b></div>
+    <div class="xl" style="left:685px">11.16<br><b>871건</b></div>
+    <div class="xl" style="left:850px">11.17<br><b>935건</b></div>
+    <!-- 오른쪽: 막대 높이 = v × 3.4px, 기준선 y=720 -->
+    <div class="rb" style="left:1080px;height:295px" data-anim="wipe-up" data-delay="1700" data-dur="500"></div>
+    <div class="rb" style="left:1225px;height:269px" data-anim="wipe-up" data-delay="1850" data-dur="500"></div>
+    <div class="rb red" style="left:1370px;height:245px" data-anim="wipe-up" data-delay="2000" data-dur="500"></div>
+    <div class="rb" style="left:1515px;height:270px" data-anim="wipe-up" data-delay="2150" data-dur="500"></div>
+    <div class="rb" style="left:1660px;height:282px" data-anim="wipe-up" data-delay="2300" data-dur="500"></div>
+    <div class="pl ink" style="left:1132px;top:375px" data-anim="fade" data-delay="2200">86.7%</div>
+    <div class="pl ink" style="left:1277px;top:401px" data-anim="fade" data-delay="2250">79.1%</div>
+    <div class="pl red" style="left:1422px;top:425px" data-anim="fade" data-delay="2300">72.0%</div>
+    <div class="abs" style="left:1322px;top:494px;width:200px;text-align:center;white-space:nowrap" data-anim="pop" data-delay="2600"><span class="tag" style="background:var(--bg);color:var(--danger);box-shadow:0 0 0 3px var(--danger)">원인 미확인</span></div>
+    <div class="pl ink" style="left:1567px;top:400px" data-anim="fade" data-delay="2350">79.4%</div>
+    <div class="pl" style="left:1712px;top:388px" data-anim="fade" data-delay="2400">82.8%</div>
+    <div class="xl" style="left:1132px">11.13<br><b>211건</b></div>
+    <div class="xl" style="left:1277px">11.14<br><b>225건</b></div>
+    <div class="xl" style="left:1422px">11.15<br><b>236건</b></div>
+    <div class="xl" style="left:1567px">11.16<br><b>199건</b></div>
+    <div class="xl" style="left:1712px">11.17<br><b>64건*</b></div>
+    <div class="notes2">
+      <div class="sub" data-anim="fade" data-delay="2600">날짜는 UTC 기준(하루는 KST 09:00 시작) · *11.17은 17시 무렵까지 · 스토어 표기 932건·79%(2026.11.17 17:33)</div>
+      <div class="rx" data-anim="fade" data-delay="2700"><b>칭찬</b> "중독성 있고 덱빌딩하는 맛", "운과 전략이 적절히 섞인 느낌" · <em>아쉬운 점</em> "불안정한 밸런스" <span style="color:var(--muted);font-size:24px;font-weight:500">— 게임메카가 정리한 11.14 시점 리뷰 요지</span></div>
+    </div>
+    <div class="src">출처: Steam 리뷰 집계(appreviewhistogram, 2026.11.17 조회), Steam 스토어(2026.11.17 17:33), 게임메카(2026.11.14)</div>
+    <aside class="notes">리뷰는 첫날 87% 긍정에서 시작해 사흘째 79%로 내려온 뒤 그 수준을 유지하고 있습니다. 날짜별로 보면 15일 하루 신규 리뷰가 72%로 가장 낮았고, 17일에는 82.8%로 다시 올랐습니다. 15일은 난이도 완화 패치 다음 날이지만, 비율이 내려간 원인은 공개 자료로 확인되지 않습니다. 이용자들은 중독성과 운·전략의 조합을 칭찬했고 밸런스를 아쉬운 점으로 꼽았습니다.</aside>
+  </section>
+
+  <!-- S20 · chart -->
+  <section class="slide" id="s20" data-layout="chart">
+    <div class="part-tag">PART <b>4</b> 확산</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">10만 장 도달 시간</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">10만 장까지 85.6시간, 같은 장르 1인작은 10일</h2>
+    </div>
+    <!-- 막대 x 620~1700: 240시간 = 1080px (4.5px/h) -->
+    <div class="rowl" style="top:350px" data-anim="fade" data-delay="200"><img class="cap" src="assets/steam/capsule.jpg" alt="Slotbound"><div class="ds">1.0 공지 → 10만 장 공지</div></div>
+    <div class="hb gold" style="top:420px;width:385px" data-anim="wipe" data-delay="400" data-dur="856"></div>
+    <div class="hv" style="left:1025px;top:424px" data-anim="pop" data-delay="1300">85.6시간</div>
+    <div class="rowl" style="top:568px" data-anim="fade" data-delay="200"><div class="nm">Slots &amp; Daggers</div><div class="ds">같은 장르 1인 개발작</div></div>
+    <div class="hb mute" style="top:580px;width:1080px" data-anim="wipe" data-delay="400" data-dur="2400"></div>
+    <div class="hv ink" style="left:1380px;top:510px" data-anim="fade" data-delay="2800">240시간(10일)</div>
+    <div class="axis" data-anim="wipe" data-delay="200" data-dur="600"></div>
+    <div class="tk" style="left:620px">0</div>
+    <div class="tk" style="left:836px">2일</div>
+    <div class="tk" style="left:1052px">4일</div>
+    <div class="tk" style="left:1268px">6일</div>
+    <div class="tk" style="left:1484px">8일</div>
+    <div class="tk" style="left:1700px">10일</div>
+    <div class="note" data-anim="fade" data-delay="3000">
+      <p class="body-l">두 게임의 출시 시점 기준이 같은지는 확인하지 못했다</p>
+      <p class="sub" style="margin-top:10px">Slots &amp; Daggers 10일: GamesRadar 2025.11.05 기사 제목 기준 · 출시 시점 기준 동일 여부 미확인</p>
+    </div>
+    <div class="src">출처: Optima Arch 스팀 공지(2026.11.17), GamesRadar(2025.11.05, Slots &amp; Daggers) · 시간은 계산값 · 로고: Slotbound 스팀 스토어</div>
+    <aside class="notes">슬롯머신 로그라이크를 혼자 만든 Slots &amp; Daggers는 10만 장까지 10일이 걸렸다고 보도됐습니다. 슬롯바운드는 85.6시간이었습니다. 두 게임의 측정 기준 시점이 같은지 확인하지 못했으므로, 이 장은 도달 시간만 나란히 놓은 것입니다.</aside>
+  </section>
+
+  <!-- S21 · chapter(C05) -->
+  <section class="slide" id="s21" data-layout="chapter">
+    <video class="fill" src="assets/clips/C05.mp4" poster="assets/clips/C05.jpg" muted loop playsinline data-play data-restart></video>
+    <div class="ch-dim"></div>
+    <div class="ch-wrap">
+      <div class="ch-part" data-anim="fade">PART 5 · 시사점</div>
+      <div class="ch-num" data-anim="blur" data-delay="100">05</div>
+      <h2 class="ch-title long" data-anim="blur" data-delay="200" data-dur="900">확인된 사실에서 나오는 것만</h2>
+      <p class="ch-sub" data-anim="rise" data-delay="1100">원인 추정은 빼고, 같은 기간에 일어난 일만 적는다</p>
+    </div>
+    <aside class="notes">마지막으로 이 사례에서 무엇을 가져갈지 보겠습니다. 성공 원인을 단정할 자료는 없으므로, 확인된 사실을 나란히 놓는 데까지만 하겠습니다.</aside>
+  </section>
+
+  <!-- S22 · grid-cards -->
+  <section class="slide" id="s22" data-layout="grid-cards">
+    <img class="bgimg" src="assets/steam/ss_06.jpg" alt="">
+    <div class="part-tag">PART <b>5</b> 시사점</div>
+    <div class="safe" style="bottom:auto">
+      <div class="kicker" data-anim="fade">확인된 사실</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="100">10만 장 이전에 확인되는 사실 4가지</h2>
+    </div>
+    <div class="cards">
+      <div class="card px" data-anim="fade" data-delay="250"><div class="cv"><span data-count data-to="126" data-dur="1000" data-delay="350">126</span><span class="unit">일</span></div><div class="cd">출시 126일 전 스팀 데모 공개, 데모 리뷰 82%(771건)</div><div class="basis">근거: 스팀 데모 출시일·1.0 출시일(계산), 데모 스토어</div></div>
+      <div class="card px" data-anim="fade" data-delay="400"><div class="cv"><span data-count data-to="47" data-dur="1000" data-delay="500">47</span><span class="unit">일</span></div><div class="cd">위시리스트 5만에서 10만까지 61일, 10만은 출시 47일 전</div><div class="basis">근거: 스팀 공지(2026.07.28, 09.27), 일수는 계산값</div></div>
+      <div class="card px" data-anim="fade" data-delay="550"><div class="cv"><span data-count data-to="9" data-dur="1000" data-delay="650">9</span><span class="unit">회</span></div><div class="cd">출시 후 3일 반 동안 업데이트 9회, "대부분 이용자 제보와 제안"</div><div class="basis">근거: 스팀 공지 v1.0.0 (1)~(9)</div></div>
+      <div class="card px" data-anim="fade" data-delay="700"><div class="cv"><span data-count data-to="2" data-dur="800" data-delay="800">2</span><span class="unit">곳</span></div><div class="cd">AI 사용 범위를 스토어와 itch.io에 고지, 출시 지연 경과도 공지</div><div class="basis">근거: 스팀 스토어·itch.io AI 고지, 스팀 공지(11.10, 11.11)</div></div>
+    </div>
+    <div class="disc" data-anim="fade" data-delay="1400">이 사실들과 판매량 사이의 인과는 공개 자료로 확인되지 않는다</div>
+    <div class="src">출처: Optima Arch 스팀 공지·스토어, 스팀 데모 스토어, itch.io(2026.11.17 조회) · 일수는 계산값 · 이미지: Slotbound 스팀 스토어</div>
+    <aside class="notes">확인되는 사실은 네 가지입니다. 데모를 출시 넉 달 전에 열어 82% 긍정 평가를 받았고, 출시 전에 위시리스트 10만을 모았고, 출시 후 3일 반 동안 아홉 번 업데이트했고, AI 사용과 출시 지연을 공지로 밝혔습니다. 이것이 판매량의 원인이라고 말할 근거는 없지만, 모두 같은 기간에 일어난 일입니다.</aside>
+  </section>
+
+  <!-- S23 · split-media -->
+  <section class="slide" id="s23" data-layout="split-media">
+    <div class="img" data-anim="wipe" data-dur="1100"><img src="assets/img/camp_top.jpg" alt="Slotbound 키아트(모닥불 앞 기사·마법사·고블린)"></div>
+    <div class="part-tag">PART <b>5</b> 시사점</div>
+    <div class="rt">
+      <div class="kicker" data-anim="fade">점검 목록</div>
+      <h2 class="h-lg" data-anim="rise" data-delay="100">1인 개발자가 출시 전에<br>확인할 5가지</h2>
+      <div class="chk">
+        <div class="ci"><div class="box" data-anim="pop" data-delay="300"><i class="fillc" data-step="1"></i></div><div data-anim="fade" data-delay="380"><div class="q">데모를 출시 몇 달 전에 열었나</div><div class="v">슬롯바운드 <b>126일</b> 전</div></div></div>
+        <div class="ci"><div class="box" data-anim="pop" data-delay="500"><i class="fillc" data-step="2"></i></div><div data-anim="fade" data-delay="580"><div class="q">위시리스트를 얼마나 모았나</div><div class="v">출시 <b>47일</b> 전 <b>10만</b></div></div></div>
+        <div class="ci"><div class="box warn" data-anim="pop" data-delay="700"><i class="fillc" data-step="3"></i></div><div data-anim="fade" data-delay="780"><div class="q">스팀 빌드 심사에 여유를 두었나</div><div class="v">예정일 <b>23일</b> 전 제출, 첫 심사 <b>13일</b> 만에 반려</div></div></div>
+        <div class="ci"><div class="box" data-anim="pop" data-delay="900"><i class="fillc" data-step="4"></i></div><div data-anim="fade" data-delay="980"><div class="q">생성형 AI 사용 범위를 고지했나</div><div class="v">스토어·itch.io 표기</div></div></div>
+        <div class="ci"><div class="box" data-anim="pop" data-delay="1100"><i class="fillc" data-step="5"></i></div><div data-anim="fade" data-delay="1180"><div class="q">출시 직후 고칠 준비가 됐나</div><div class="v">3일 반 동안 <b>9회</b></div></div></div>
+      </div>
+      <div class="caveat" data-anim="fade" data-delay="1400">슬롯바운드의 기록이며, 판매량의 원인으로 확인된 것은 아니다</div>
+    </div>
+    <div class="src">출처: Optima Arch 스팀 공지·스토어, itch.io(2026.11.17 조회) · 일수는 계산값 · 이미지: Slotbound 스팀 스토어</div>
+    <aside class="notes">슬롯바운드의 기록을 점검 항목으로 바꾼 목록입니다. 특히 스팀 빌드 심사는 안내 기간보다 오래 걸릴 수 있어서, 출시 예정일 23일 전에 제출하고도 출시가 사흘 밀렸습니다. 준비 중인 프로젝트에 이 다섯 줄을 하나씩 확인해 보시면 됩니다. (클릭할 때마다 한 줄씩 체크됩니다.)</aside>
+  </section>
+
+  <!-- S24 · sources -->
+  <section class="slide" id="s24" data-layout="sources">
+    <img class="cap" src="assets/steam/capsule.jpg" alt="Slotbound" data-anim="fade" data-delay="200">
+    <div class="safe" style="bottom:auto;right:420px">
+      <div class="kicker" data-anim="fade">SOURCES</div>
+      <h2 class="h-md" style="margin-top:22px" data-anim="rise" data-delay="80">출처 · 조회일 2026.11.17</h2>
+    </div>
+    <div class="cols">
+      <div class="grp" data-anim="fade" data-delay="160"><h3>개발자 1차</h3><p>LinkedIn 게시물 2건 <span class="m">activity 7527586980000419841, 7528126732894097408</span> · 스팀 공지(2026.07.11 데모, 07.28·09.27 위시리스트, 10.05 v0.4.0, 11.10·11.11 연기, 11.13 출시, v1.0.0 (1)~(9), 11.17 10만 장) · itch.io optimaarch(데브로그 2026.06.28, AI 고지) · Threads·X @optimaarchgames(검색 결과 문구)</p></div>
+      <div class="grp" data-anim="fade" data-delay="240"><h3>스토어·API</h3><p>스팀 앱 4459590·데모 4906570(appdetails, 스토어 페이지, 리뷰 히스토그램), Steam API GetNumberOfCurrentPlayers(2026.11.17 17:33 KST), 공식 트레일러(2026.10.28 등록)</p></div>
+      <div class="grp" data-anim="fade" data-delay="320"><h3>집계</h3><p>Steam Charts(2026.11.17 조회)</p></div>
+      <div class="grp" data-anim="fade" data-delay="400"><h3>보도</h3><p>게임메카(2026.11.04, 11.14), 게임조선(2026.11.04), opgg.news(2026.05.23), iXBT.games(2026.07.27, 11.14), PlayGround.ru(2026.11.13), GamesRadar(2025.11.05, Slots &amp; Daggers)</p></div>
+      <div class="grp" data-anim="fade" data-delay="480"><h3>환율</h3><p>ECB 기준값(Frankfurter), 2026.11.13 1달러 = 1,337.13원</p></div>
+      <div class="grp" data-anim="fade" data-delay="560"><h3>이미지</h3><p>게임 화면·로고·트레일러는 Slotbound 스팀 스토어 공식 미디어. 밤의 방·슬롯 릴·창문 이미지는 생성 이미지(분위기 연출)</p></div>
+      <div class="grp" data-anim="fade" data-delay="640"><h3>계산값</h3><p>일수·경과 시간·장 수 역산은 공개 수치로 계산한 값</p></div>
+    </div>
+    <aside class="notes">발표에 쓴 숫자의 출처입니다. 개발자 발표, 스토어 표기, 집계 사이트, 보도, 계산값을 나눠 적었습니다. 동시 접속자, 리뷰 수, LinkedIn 반응은 조회 시각에 따라 바뀌는 값입니다.</aside>
+  </section>
+
+</main>
+<script>
+  // deck.js 보다 먼저: 글자 단위 등장([data-split])과 숫자 자리 굴림([data-roll])을 만든다.
+  (() => {
+    document.querySelectorAll('[data-split]').forEach(el => {
+      let d = parseInt(el.dataset.split || '0', 10);
+      const walk = node => {
+        [...node.childNodes].forEach(n => {
+          if (n.nodeType === 3) {
+            const frag = document.createDocumentFragment();
+            for (const ch of n.textContent) {
+              if (ch === ' ') { frag.append(' '); continue; }
+              const s = document.createElement('span');
+              s.textContent = ch; s.dataset.anim = 'fade'; s.dataset.delay = String(d); s.dataset.dur = '500'; d += 45;
+              frag.append(s);
+            }
+            n.replaceWith(frag);
+          } else if (n.nodeType === 1) walk(n);
+        });
+      };
+      walk(el);
+    });
+    document.querySelectorAll('[data-roll]').forEach(el => {
+      const txt = el.dataset.roll; el.textContent = ''; let i = 0;
+      for (const ch of txt) {
+        if (!/\d/.test(ch)) { el.append(ch); continue; }
+        const r = document.createElement('span'); r.className = 'roll'; r.style.setProperty('--i', i++);
+        const st = document.createElement('span'); st.className = 'strip';
+        st.append(ch); // 0~9 굴림 줄은 ::before 로 그린다(검사 스크립트가 숨은 숫자를 글자로 세지 않게)
+        r.append(st); el.append(r);
+      }
+    });
+  })();
+</script>
+<script src="deck.js"></script>
+<script>
+  (() => {
+    const STATIC = document.documentElement.classList.contains('static');
+
+    // S01: 소리 있는 인트로는 클릭으로 재생한다. 끝나면 마지막 프레임에 이름을 남긴다.
+    const s01 = document.getElementById('s01');
+    const btn = s01 && s01.querySelector('.deck-start');
+    const iv = document.getElementById('introVideo');
+    if (btn && iv) {
+      btn.addEventListener('click', e => { e.stopPropagation(); iv.currentTime = 0; iv.muted = false; s01.classList.remove('ended'); s01.classList.add('playing'); iv.play().catch(() => {}); btn.remove(); });
+      iv.addEventListener('playing', () => s01.classList.add('playing'));
+      iv.addEventListener('ended', () => s01.classList.add('ended'));
+      document.addEventListener('slideenter', e => { if (e.detail.index !== 0 && btn.isConnected) btn.remove(); if (e.detail.index === 0) s01.classList.remove('ended'); });
+    }
+
+    // 한국식 금액 카운트업: 4억 7천만
+    const fmtEok = v => { const n = Math.round(v / 1e7); const e = Math.floor(n / 10), c = n % 10; if (!e && !c) return '0'; return (e ? e + '억' : '') + (c ? (e ? ' ' : '') + c + '천만' : ''); };
+    const fmtMan = v => { const n = Math.round(v), m = Math.floor(n / 1e4), r = n % 1e4; if (!m) return r.toLocaleString('ko-KR'); return m + '만' + (r ? ' ' + r.toLocaleString('ko-KR') : ''); };
+    const runKc = slide => slide.querySelectorAll('[data-kc]').forEach(el => {
+      const f = el.dataset.kcFmt === 'man' ? fmtMan : fmtEok;
+      const to = parseFloat(el.dataset.kc), dur = parseInt(el.dataset.kcDur || '1800', 10), delay = parseInt(el.dataset.kcDelay || '0', 10) + 180;
+      const t0 = performance.now() + delay; el.textContent = '0';
+      const tick = now => { if (!slide.classList.contains('is-active')) return; const p = Math.min(1, Math.max(0, (now - t0) / dur));
+        el.textContent = f(to * (1 - Math.pow(1 - p, 4))); if (p < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    });
+
+    // 글자 하나씩 치기
+    const runType = slide => slide.querySelectorAll('[data-type]').forEach(el => {
+      const full = el.dataset.typeFull || (el.dataset.typeFull = el.textContent); el.textContent = ''; let i = 0;
+      const step = () => { if (!slide.classList.contains('is-active')) { el.textContent = full; return; } el.textContent = full.slice(0, ++i); if (i < full.length) setTimeout(step, 60); };
+      setTimeout(step, 200);
+    });
+
+    // S07: 트레일러 재생 시각에 맞춰 태그라인을 켠다
+    const tv = document.getElementById('trailerMain');
+    const tls = [...document.querySelectorAll('#s07 .taglines li')];
+    if (tv && tls.length) tv.addEventListener('timeupdate', () => {
+      const t = tv.currentTime; let cur = -1;
+      tls.forEach((li, i) => { if (t >= parseFloat(li.dataset.t)) cur = i; });
+      tls.forEach((li, i) => { li.classList.toggle('on', i === cur); li.classList.toggle('past', i < cur); });
+    });
+
+    // S09: 운명석 구간(17~20초)만 반복
+    const fv = document.getElementById('fateVideo');
+    if (fv) fv.addEventListener('timeupdate', () => { if (fv.currentTime >= 20 || fv.currentTime < 16.9) fv.currentTime = 17; });
+
+    // S14: 점을 누르면 업데이트 내용 표시
+    const tip = document.querySelector('#s14 .tip');
+    document.querySelectorAll('#s14 [data-tip]').forEach(d => d.addEventListener('click', e => { e.stopPropagation(); tip.textContent = d.dataset.tip; }));
+
+    document.addEventListener('slideenter', e => {
+      if (STATIC) return;
+      runKc(e.detail.slide); runType(e.detail.slide);
+      if (e.detail.id === 's07') tls.forEach(li => li.classList.remove('on', 'past'));
+      if (e.detail.id === 's14' && tip) tip.textContent = '';
+    });
+    // deck.js 가 첫 장을 이미 연 뒤에 붙었으므로 현재 장에 한 번 실행
+    if (!STATIC && window.__deck) { const s = document.querySelectorAll('.deck > .slide')[window.__deck.index()]; if (s) { runKc(s); runType(s); } }
+  })();
+</script>
+</body>
+</html>

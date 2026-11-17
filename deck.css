@@ -1,0 +1,103 @@
+/* motion-deck 기본 스타일 — 1920×1080 무대를 화면에 맞춰 축소하고, 장 전환·등장 모션·인쇄(PDF) 모드를 제공한다.
+   색·서체는 index.html 의 :root 토큰에서 바꾼다. 이 파일은 사례마다 고치지 않고 덮어써서 쓴다. */
+:root {
+  --bg: #0b0b12; --bg2: #151422; --ink: #f4f1ea; --muted: #a29db0; --line: rgba(255,255,255,.14);
+  --accent: #ffcc33; --accent2: #8a5cff; --accent3: #3ddc97;
+  --font-sans: 'Pretendard Variable', 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-io: cubic-bezier(.65, 0, .35, 1);
+  --ease-back: cubic-bezier(.34, 1.56, .64, 1);
+  --pad: 120px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+body { font-family: var(--font-sans); color: var(--ink); -webkit-font-smoothing: antialiased; word-break: keep-all; }
+
+/* 무대 */
+.deck { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px;
+  transform: translate(-50%, -50%) scale(var(--s, 1)); transform-origin: center; }
+.slide { position: absolute; inset: 0; overflow: hidden; background: var(--bg); color: var(--ink);
+  opacity: 0; visibility: hidden; z-index: 0; }
+.slide.is-active { opacity: 1; visibility: visible; z-index: 2; transition: opacity .7s var(--ease-out); }
+.slide.is-prev { opacity: 1; visibility: visible; z-index: 1; }
+.slide > .notes { display: none; }
+
+/* 기본 영역 */
+.safe { position: absolute; inset: var(--pad); }
+.kicker { font: 600 26px/1 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+.h-xl { font: 900 132px/1.02 var(--font-display); letter-spacing: -.035em; margin: 0; }
+.h-lg { font: 800 92px/1.08 var(--font-display); letter-spacing: -.03em; margin: 0; }
+.h-md { font: 800 60px/1.15 var(--font-display); letter-spacing: -.02em; margin: 0; }
+.body { font: 500 34px/1.5 var(--font-sans); color: var(--muted); margin: 0; }
+.num { font: 900 260px/.9 var(--font-display); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+.src { position: absolute; left: var(--pad); bottom: 48px; font: 500 20px/1.3 var(--font-sans); color: var(--muted); opacity: .8; }
+.media { position: absolute; object-fit: cover; }
+.fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scrim-l { position: absolute; inset: 0; background: linear-gradient(90deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 70%, transparent) 45%, transparent 80%); }
+.scrim-b { position: absolute; inset: 0; background: linear-gradient(0deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 60%, transparent) 40%, transparent 75%); }
+
+/* ── 등장 모션: data-anim="rise|fade|scale|wipe|wipe-up|blur|left|right|drop|pop|draw"  data-delay="ms"
+   규칙: data-anim 을 단 요소에는 다른 transform 을 주지 않는다(감싸는 요소에 단다). */
+[data-anim] { --d: 0ms; }
+.slide.is-active [data-anim] {
+  transition-property: opacity, transform, clip-path, filter, stroke-dashoffset;
+  transition-duration: var(--dur, .95s); transition-timing-function: var(--ease-out);
+  transition-delay: calc(var(--d) + 180ms);
+}
+.slide:not(.is-active):not(.is-prev) [data-anim="rise"] { opacity: 0; transform: translateY(70px); }
+.slide:not(.is-active):not(.is-prev) [data-anim="drop"] { opacity: 0; transform: translateY(-70px); }
+.slide:not(.is-active):not(.is-prev) [data-anim="left"] { opacity: 0; transform: translateX(-110px); }
+.slide:not(.is-active):not(.is-prev) [data-anim="right"] { opacity: 0; transform: translateX(110px); }
+.slide:not(.is-active):not(.is-prev) [data-anim="fade"] { opacity: 0; }
+.slide:not(.is-active):not(.is-prev) [data-anim="scale"] { opacity: 0; transform: scale(.9); }
+.slide:not(.is-active):not(.is-prev) [data-anim="pop"] { opacity: 0; transform: scale(.4); }
+.slide:not(.is-active):not(.is-prev) [data-anim="blur"] { opacity: 0; filter: blur(24px); transform: scale(1.06); }
+.slide:not(.is-active):not(.is-prev) [data-anim="wipe"] { clip-path: inset(0 100% 0 0); }
+.slide:not(.is-active):not(.is-prev) [data-anim="wipe-up"] { clip-path: inset(100% 0 0 0); }
+.slide.is-active [data-anim="pop"] { transition-timing-function: var(--ease-back); }
+[data-anim="wipe"], [data-anim="wipe-up"] { clip-path: inset(0 0 0 0); }
+/* SVG 선 그리기: path 에 pathLength="1" 을 준다 */
+[data-anim="draw"] { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.slide:not(.is-active):not(.is-prev) [data-anim="draw"] { stroke-dashoffset: 1; }
+.slide.is-active [data-anim="draw"] { transition-duration: var(--dur, 1.6s); transition-timing-function: var(--ease-io); }
+
+/* 단계 공개: data-step="1..n" — 다음 키를 누를 때마다 하나씩 나온다 */
+[data-step] { transition: opacity .6s var(--ease-out), transform .6s var(--ease-out); }
+[data-step]:not(.step-on) { opacity: 0; transform: translateY(30px); }
+
+/* 계속 움직이는 강조(장이 보일 때만): data-loop="float|pulse|spin|scan" */
+.slide.is-active [data-loop="float"] { animation: dk-float 6s ease-in-out infinite; }
+.slide.is-active [data-loop="pulse"] { animation: dk-pulse 2.4s ease-in-out infinite; }
+.slide.is-active [data-loop="spin"] { animation: dk-spin 40s linear infinite; }
+.slide.is-active [data-loop="kenburns"] { animation: dk-ken 18s ease-in-out infinite alternate; }
+@keyframes dk-float { 50% { transform: translateY(-14px); } }
+@keyframes dk-pulse { 50% { opacity: .55; } }
+@keyframes dk-spin { to { transform: rotate(360deg); } }
+@keyframes dk-ken { from { transform: scale(1.02) translate(0, 0); } to { transform: scale(1.12) translate(-2%, -1.5%); } }
+
+/* 진행 표시 */
+.deck-ui { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; z-index: 50; pointer-events: none; }
+.deck-ui .bar { height: 100%; width: calc(var(--p, 0) * 100%); background: var(--accent); transition: width .5s var(--ease-out); }
+.deck-count { position: fixed; right: 20px; bottom: 14px; z-index: 50; font: 600 13px/1 var(--font-mono); color: rgba(255,255,255,.55); letter-spacing: .1em; }
+.deck-notes { position: fixed; left: 20px; right: 20px; bottom: 30px; z-index: 60; max-height: 34vh; overflow: auto; display: none;
+  background: rgba(10,10,14,.92); color: #eee; font: 400 17px/1.6 var(--font-sans); padding: 18px 22px; border-radius: 10px; border: 1px solid #333; }
+html.show-notes .deck-notes { display: block; }
+.deck-start { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; cursor: pointer; }
+.deck-start span { font: 700 22px/1 var(--font-sans); color: #fff; padding: 18px 30px; border-radius: 999px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); backdrop-filter: blur(6px); }
+
+/* 정적 모드(?static=1, 검수 스크린숏)·인쇄 모드(?print=1, PDF): 모든 모션을 끝난 상태로 */
+html.static [data-anim], html.static [data-step] { transition: none !important; opacity: 1 !important; clip-path: none !important; filter: none !important; transform: none !important; stroke-dashoffset: 0 !important; }
+html.static [data-loop] { animation: none !important; }
+html.print, html.print body { overflow: visible; height: auto; background: var(--bg); }
+html.print .deck { position: static; transform: none; width: 1920px; height: auto; }
+html.print .slide { position: relative; opacity: 1; visibility: visible; width: 1920px; height: 1080px; break-after: page; page-break-after: always; }
+html.print .deck-ui, html.print .deck-count, html.print .deck-notes, html.print .deck-start { display: none !important; }
+@page { size: 1920px 1080px; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide.is-active [data-anim] { transition-duration: .01s !important; transition-delay: 0s !important; }
+  [data-loop] { animation: none !important; }
+}

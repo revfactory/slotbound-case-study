@@ -1,5 +1,7 @@
 # Slotbound(슬롯바운드) 사례 발표
 
+[![Slotbound 사례 썸네일: 개발 경험 없이 시작해 혼자 만든 첫 게임](og-image.jpg)](https://revfactory.github.io/slotbound-case-study/)
+
 1인 개발자 Min Kim(Optima Arch)이 만든 게임 Slotbound의 개발 과정과 출시 후 확산 기록을 정리한 발표 자료입니다. 20초 인트로 영상과 모션 그래픽이 들어간 HTML 슬라이드 24장으로 구성했습니다.
 
 ## 바로 보기

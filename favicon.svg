@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- 3×3 픽셀 슬롯 릴: 가운데 줄이 금색으로 맞은 상태 -->
+  <rect width="32" height="32" fill="#140e19"/>
+  <rect x="2" y="2" width="28" height="28" fill="#382c3d"/>
+  <rect x="4" y="4" width="24" height="24" fill="#271a29"/>
+  <g fill="#9b5cff">
+    <rect x="5" y="5" width="6" height="6"/><rect x="13" y="5" width="6" height="6"/><rect x="21" y="5" width="6" height="6"/>
+    <rect x="5" y="21" width="6" height="6"/><rect x="13" y="21" width="6" height="6"/><rect x="21" y="21" width="6" height="6"/>
+  </g>
+  <rect x="4" y="12" width="24" height="8" fill="#ffc94a"/>
+  <g fill="#a86a12">
+    <rect x="11" y="13" width="2" height="6"/><rect x="19" y="13" width="2" height="6"/>
+  </g>
+</svg>
